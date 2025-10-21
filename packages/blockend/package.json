@@ -1,17 +1,29 @@
 {
-  "name": "blockend",
+  "name": "backend",
   "version": "1.0.0",
-  "type": "module",
   "devDependencies": {
-    "@nomicfoundation/hardhat-ignition": "^3.0.0",
-    "@nomicfoundation/hardhat-toolbox-viem": "^5.0.0",
-    "@types/node": "^22.8.5",
-    "forge-std": "github:foundry-rs/forge-std#v1.9.4",
-    "hardhat": "^3.0.7",
-    "typescript": "~5.8.0",
-    "viem": "^2.30.0"
+    "@nomicfoundation/hardhat-chai-matchers": "^2.0.0",
+    "@nomicfoundation/hardhat-ethers": "4.0.2",
+    "@nomicfoundation/hardhat-ignition": "3.0.3",
+    "@nomicfoundation/hardhat-ignition-ethers": "3.0.3",
+    "@nomicfoundation/hardhat-network-helpers": "3.0.1",
+    "@nomicfoundation/hardhat-toolbox": "6.1.0",
+    "@nomicfoundation/hardhat-verify": "3.0.3",
+    "@typechain/ethers-v6": "^0.5.0",
+    "@typechain/hardhat": "^9.0.0",
+    "@types/node": "^24.9.1",
+    "chai": "6.2.0",
+    "ethers": "^6.4.0",
+    "hardhat": "3.0.7",
+    "hardhat-gas-reporter": "2.3.0",
+    "solidity-coverage": "^0.8.0",
+    "ts-node": ">=8.0.0",
+    "typechain": "^8.3.0",
+    "typescript": ">=4.5.0"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "^5.4.0"
-  }
+    "@openzeppelin/contracts": "^5.0.2",
+    "dotenv": "17.2.3"
+  },
+  "type": "module"
 }

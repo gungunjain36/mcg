@@ -92,7 +92,7 @@ contract Market is ERC1155 {
         uint256 cost = getCostForShares(_outcome, _sharesToBuy);
         if (msg.value < cost) revert InsufficientPayment();
 
-        // Hardhat 3.0 Debugging
+        // Hardhat 3 Debugging
         console.log("--- Buy Shares ---");
         console.log("User:", msg.sender, " | Outcome:", _outcome ? "YES" : "NO");
         console.log("Shares to Buy:", _sharesToBuy, " | Cost:", cost);
