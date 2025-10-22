@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useQuery } from "@tanstack/react-query";
 import Header from '@/components/layout/Header';
 import MarketCard from '@/components/market/MarketCard';
 import { Button } from '@/components/ui/button';
@@ -6,12 +7,45 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Search, TrendingUp, Plus } from 'lucide-react';
 import { mockMarkets } from '@/lib/mockData';
+import StatsCards from '@/components/dashboard/StatsCards';
+import { graph } from '@/lib/graphql';
 
 const Home = () => {
   const [filter, setFilter] = useState<'all' | 'active' | 'resolved'>('active');
   const [searchQuery, setSearchQuery] = useState('');
   
-  const filteredMarkets = mockMarkets.filter((market) => {
+  const { data: statsData, isLoading: statsLoading } = useQuery({
+    queryKey: ["globalStats"],
+    queryFn: graph.getGlobalStats,
+  });
+
+  const { data: marketsData, isLoading: marketsLoading } = useQuery({
+    queryKey: ["markets", 30],
+    queryFn: () => graph.getMarkets(30, 0),
+  });
+
+  const marketsFromIndexer = marketsData?.markets ?? [];
+  const mappedMarkets = marketsFromIndexer.map((m) => ({
+    id: m.id,
+    question: m.question,
+    collectionSlug: m.collectionSlug,
+    collectionName: m.collectionSlug,
+    collectionImage: `/nfts/${m.collectionSlug || 'placeholder'}.png`,
+    targetPrice: Number(m.targetPrice),
+    currentFloorPrice: 0,
+    resolutionDate: '',
+    yesPrice: 0,
+    noPrice: 0,
+    totalVolume: Number(m.totalVolume),
+    totalLiquidity: 0,
+    creatorAddress: '',
+    resolved: m.status === 'Resolved',
+    outcome: undefined,
+  }));
+
+  const dataForUI = (marketsLoading ? [] : (mappedMarkets.length ? mappedMarkets : mockMarkets));
+
+  const filteredMarkets = dataForUI.filter((market) => {
     const matchesFilter =
       filter === 'all' ||
       (filter === 'active' && !market.resolved) ||
@@ -55,6 +89,15 @@ const Home = () => {
       {/* Markets Section */}
       <section className="py-8">
         <div className="container mx-auto px-4">
+          <div className="mb-8">
+            <StatsCards
+              totalMarkets={statsData?.globalStats?.totalMarkets}
+              totalTrades={statsData?.globalStats?.totalTrades}
+              totalUsers={statsData?.globalStats?.totalUsers}
+              totalVolumeEth={statsData?.globalStats ? String(statsData.globalStats.totalVolume) : '0'}
+              loading={statsLoading}
+            />
+          </div>
           <div className="mb-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
             <Tabs value={filter} onValueChange={(v) => setFilter(v as any)}>
               <TabsList>

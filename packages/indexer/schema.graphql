@@ -1,0 +1,69 @@
+type Market {
+  id: ID!
+  marketAddress: String!
+  creator: String!
+  resolver: String!
+  question: String!
+  collectionSlug: String!
+  targetPrice: BigInt!
+  resolutionTimestamp: BigInt!
+  status: MarketStatus!
+  winningOutcome: Boolean
+  finalPrice: BigInt
+  yesSharesTotal: BigInt!
+  noSharesTotal: BigInt!
+  totalVolume: BigInt!
+  totalTrades: Int!
+  createdAt: BigInt!
+  resolvedAt: BigInt
+}
+
+type User {
+  id: ID!
+  address: String!
+  totalTrades: Int!
+  totalVolume: BigInt!
+  marketsCreated: Int!
+  createdAt: BigInt!
+  updatedAt: BigInt!
+}
+
+type Position {
+  id: ID!
+  market_id: String!
+  user_id: String!
+  yesShares: BigInt!
+  noShares: BigInt!
+  totalInvested: BigInt!
+  realizedPnL: BigInt!
+  updatedAt: BigInt!
+}
+
+type Trade {
+  id: ID!
+  market_id: String!
+  user_id: String!
+  outcome: Boolean!
+  isBuy: Boolean!
+  shareAmount: BigInt!
+  ethAmount: BigInt!
+  yesSharesTotal: BigInt!
+  noSharesTotal: BigInt!
+  timestamp: BigInt!
+  blockNumber: BigInt!
+  transactionHash: String!
+}
+
+type GlobalStats {
+  id: ID!
+  totalMarkets: Int!
+  totalTrades: Int!
+  totalVolume: BigInt!
+  totalUsers: Int!
+  updatedAt: BigInt!
+}
+
+enum MarketStatus {
+  Open
+  Resolved
+}

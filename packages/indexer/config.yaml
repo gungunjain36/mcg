@@ -1,0 +1,46 @@
+# yaml-language-server: $schema=./node_modules/envio/evm.schema.json
+name: MCG-Fun-Markets
+description: Prediction Markets Indexer for NFT Floor Prices
+
+contracts:
+  - name: MarketFactory
+    abi_file_path: ./abi/MarketFactory.json
+    handler: ./src/EventHandlers.ts
+    events:
+      - event: MarketCreated(address indexed marketAddress, address indexed creator, string question, string collectionSlug, uint256 targetPrice, uint256 resolutionTimestamp)
+  
+  - name: Market
+    abi_file_path: ./abi/Market.json
+    handler: ./src/EventHandlers.ts
+    events:
+      - event: Trade(address indexed user, bool indexed outcome, uint256 ethAmount, uint256 shareAmount)
+        field_selection:
+          transaction_fields:
+            - hash
+            - value
+      - event: MarketResolved(bool winningOutcome, uint256 finalReportedPrice)
+
+networks:
+  # You'll need to update these with your actual deployment addresses and networks
+  - id: 31337 # Local hardhat network - update this to your target network
+    start_block: 0
+    rpc_config:
+      url: http://127.0.0.1:8545
+    contracts:
+      - name: MarketFactory
+        address: 
+          # Add your MarketFactory address here when deployed
+          # Example: - 0x5FbDB2315678afecb367f032d93F642f64180aa3
+      - name: Market
+        # For dynamic contracts created by factory, we'll handle this differently
+        # Leave this empty and we'll use wildcard_tracking in the handler
+
+# Unordered multichain mode for real-time indexing across chains
+unordered_multichain_mode: false
+
+# Preload optimization for faster indexing
+# Handlers will run twice, so use Effect API for external calls
+preload_handlers: true
+
+# Use lowercase for faster address operations
+address_format: lowercase
