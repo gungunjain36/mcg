@@ -1,18 +1,89 @@
 import { useParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import Header from '@/components/layout/Header';
 import MarketStats from '@/components/market/MarketStats';
 import TradeWidget from '@/components/trade/TradeWidget';
 import TradeHistory from '@/components/trade/TradeHistory';
 import AsiChatWidget from '@/components/ai/AsiChatWidget';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ExternalLink, TrendingUp, TrendingDown } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { ExternalLink } from 'lucide-react';
 import { mockMarkets, mockTrades } from '@/lib/mockData';
+import { getFloorPrice, getCollectionDisplayInfo } from '@/lib/opensea';
+import { graph } from '@/lib/graphql';
 
 const MarketDetail = () => {
   const { id } = useParams();
-  const market = mockMarkets.find((m) => m.id === id);
+  
+  // Fetch market data from indexer
+  const { data: marketData, isLoading: isLoadingMarket } = useQuery({
+    queryKey: ['market', id],
+    queryFn: () => graph.getMarketById(id || ''),
+    enabled: !!id,
+    refetchInterval: 5000, // Refetch every 5 seconds for real-time updates
+  });
+
+  // Fetch market trades from indexer
+  const { data: tradesData, isLoading: isLoadingTrades } = useQuery({
+    queryKey: ['marketTrades', id],
+    queryFn: () => graph.getMarketTrades(id || '', 100, 0),
+    enabled: !!id,
+    refetchInterval: 5000,
+  });
+  
+  const marketFromIndexer = marketData?.market;
+  const collectionSlug = marketFromIndexer?.collectionSlug || '';
+  
+  // Fetch OpenSea floor price
+  const { data: floorPrice, isLoading: isLoadingFloor } = useQuery({
+    queryKey: ['floorPrice', collectionSlug],
+    queryFn: () => getFloorPrice(collectionSlug),
+    enabled: !!collectionSlug,
+    refetchInterval: 60000, // Refetch every minute
+  });
+  
+  // Fallback to mock data if indexer data isn't available
+  const mockMarket = mockMarkets.find((m) => m.id === id);
+  
+  // Create market object from indexer data or fallback to mock
+  const market = marketFromIndexer ? (() => {
+    const yesShares = Number(marketFromIndexer.yesSharesTotal) / 1e18;
+    const noShares = Number(marketFromIndexer.noSharesTotal) / 1e18;
+    const totalShares = yesShares + noShares;
+    const yesPrice = totalShares > 0 ? yesShares / totalShares : 0.5;
+    const noPrice = totalShares > 0 ? noShares / totalShares : 0.5;
+    
+    return {
+      id: marketFromIndexer.marketAddress,
+      question: marketFromIndexer.question,
+      collectionSlug: marketFromIndexer.collectionSlug,
+      collectionName: getCollectionDisplayInfo(marketFromIndexer.collectionSlug).name,
+      collectionImage: getCollectionDisplayInfo(marketFromIndexer.collectionSlug).image,
+      targetPrice: Number(marketFromIndexer.targetPrice) / 1e18,
+      currentFloorPrice: floorPrice || 0,
+      resolutionDate: new Date(Number(marketFromIndexer.resolutionTimestamp) * 1000).toISOString(),
+      yesPrice,
+      noPrice,
+      totalVolume: Number(marketFromIndexer.totalVolume) / 1e18,
+      totalLiquidity: totalShares,
+      creatorAddress: marketFromIndexer.creator,
+      resolved: marketFromIndexer.status === 'Resolved',
+      outcome: marketFromIndexer.winningOutcome,
+    };
+  })() : mockMarket;
+  
+  if (isLoadingMarket) {
+    return (
+      <div className="min-h-screen">
+        <Header />
+        <div className="container mx-auto px-4 py-16">
+          <Skeleton className="h-8 w-3/4 mb-4" />
+          <Skeleton className="h-64 w-full" />
+        </div>
+      </div>
+    );
+  }
   
   if (!market) {
     return (
@@ -26,7 +97,17 @@ const MarketDetail = () => {
     );
   }
   
-  const marketTrades = mockTrades.filter((t) => t.marketId === market.id);
+  // Map indexer trades to UI format
+  const marketTrades = tradesData?.Trade ? tradesData.Trade.map(t => ({
+    id: t.id,
+    marketId: t.market_id,
+    userAddress: t.user_id,
+    outcome: t.outcome ? 'yes' : 'no',
+    type: t.isBuy ? 'buy' : 'sell',
+    shares: Number(t.shareAmount) / 1e18,
+    price: Number(t.ethAmount) / 1e18,
+    timestamp: new Date(Number(t.timestamp) * 1000).toISOString(),
+  })) : mockTrades.filter((t) => t.marketId === market.id);
   
   return (
     <div className="min-h-screen">
@@ -80,7 +161,7 @@ const MarketDetail = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column - Trading & History */}
           <div className="lg:col-span-2 space-y-6">
-            <TradeWidget market={market} />
+            <TradeWidget market={market} marketAddress={marketAddress} />
             <TradeHistory trades={marketTrades} />
             
             {/* Market Details */}

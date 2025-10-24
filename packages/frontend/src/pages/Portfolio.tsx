@@ -5,20 +5,75 @@ import { Button } from '@/components/ui/button';
 import { TrendingUp, TrendingDown, ArrowRight, Wallet } from 'lucide-react';
 import { mockMarkets, mockPositions } from '@/lib/mockData';
 import { Link } from 'react-router-dom';
+import { useAccount } from 'wagmi';
+import { useQuery } from '@tanstack/react-query';
+import { graph } from '@/lib/graphql';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const Portfolio = () => {
-  const activePositions = mockPositions.map((position) => {
-    const market = mockMarkets.find((m) => m.id === position.marketId);
+  const { address, isConnected } = useAccount();
+  
+  // Fetch user positions from indexer
+  const { data: positionsData, isLoading } = useQuery({
+    queryKey: ['userPositions', address],
+    queryFn: () => graph.getUserPositions(address || ''),
+    enabled: !!address && isConnected,
+    refetchInterval: 10000,
+  });
+  
+  // Fetch markets data to get current prices
+  const { data: marketsData } = useQuery({
+    queryKey: ['markets', 100],
+    queryFn: () => graph.getMarkets(100, 0, [{ createdAt: 'desc' }]),
+  });
+  
+  const positions = positionsData?.Position || [];
+  const markets = marketsData?.Market || [];
+  
+  const activePositions = positions.map((position) => {
+    const market = markets.find((m) => m.marketAddress === position.market_id);
     if (!market) return null;
     
-    const yesValue = position.yesShares * market.yesPrice;
-    const noValue = position.noShares * market.noPrice;
-    const totalValue = yesValue + noValue;
-    const totalCost = position.yesShares * position.avgYesPrice + position.noShares * position.avgNoPrice;
-    const profit = totalValue - totalCost;
-    const profitPercent = ((profit / totalCost) * 100).toFixed(2);
+    const yesShares = Number(position.yesShares) / 1e18;
+    const noShares = Number(position.noShares) / 1e18;
+    const totalInvested = Number(position.totalInvested) / 1e18;
+    const realizedPnL = Number(position.realizedPnL) / 1e18;
     
-    return { position, market, totalValue, profit, profitPercent };
+    // Calculate current market prices
+    const marketYesShares = Number(market.yesSharesTotal) / 1e18;
+    const marketNoShares = Number(market.noSharesTotal) / 1e18;
+    const totalShares = marketYesShares + marketNoShares;
+    const yesPrice = totalShares > 0 ? marketYesShares / totalShares : 0.5;
+    const noPrice = totalShares > 0 ? marketNoShares / totalShares : 0.5;
+    
+    const yesValue = yesShares * yesPrice;
+    const noValue = noShares * noPrice;
+    const totalValue = yesValue + noValue;
+    const profit = totalValue - totalInvested + realizedPnL;
+    const profitPercent = totalInvested > 0 ? ((profit / totalInvested) * 100).toFixed(2) : '0';
+    
+    return {
+      position: {
+        marketId: position.market_id,
+        yesShares,
+        noShares,
+        avgYesPrice: yesPrice,
+        avgNoPrice: noPrice,
+      },
+      market: {
+        id: market.marketAddress,
+        question: market.question,
+        collectionSlug: market.collectionSlug,
+        collectionName: market.collectionSlug,
+        collectionImage: `/nfts/${market.collectionSlug || 'placeholder'}.png`,
+        yesPrice,
+        noPrice,
+        resolved: market.status === 'Resolved',
+      },
+      totalValue,
+      profit,
+      profitPercent,
+    };
   }).filter(Boolean);
   
   const totalPortfolioValue = activePositions.reduce((sum, item) => sum + (item?.totalValue || 0), 0);

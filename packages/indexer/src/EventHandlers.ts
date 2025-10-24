@@ -77,6 +77,10 @@ MarketFactory.MarketCreated.handler(async ({ event, context }) => {
   const creatorAddress = event.params.creator.toLowerCase();
   const timestamp = BigInt(event.block.timestamp);
 
+  // TODO: Add dynamic contract registration for Market contracts
+  // This will allow us to automatically track events from newly created markets
+  // See: https://docs.envio.dev/docs/HyperIndex/contract-import
+
   // Create Market entity
   const marketEntity: MarketEntity = {
     id: marketAddress,

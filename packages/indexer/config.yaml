@@ -21,22 +21,32 @@ contracts:
       - event: MarketResolved(bool winningOutcome, uint256 finalReportedPrice)
 
 networks:
-  # You'll need to update these with your actual deployment addresses and networks
-  - id: 31337 # Local hardhat network - update this to your target network
+  # Sepolia testnet - main network for testing
+  - id: 11155111
+    start_block: 0
+    hypersync_config:
+      url: https://sepolia.hypersync.xyz
+    contracts:
+      - name: MarketFactory
+        address:
+          - 0x84ace9de871cdca72aed2df45ef03f92ed643083
+      - name: Market
+        # Markets are created dynamically, will use wildcard tracking
+        
+  # Local hardhat network for development
+  - id: 31337
     start_block: 0
     rpc_config:
       url: http://127.0.0.1:8545
     contracts:
       - name: MarketFactory
-        address: 
-          # Add your MarketFactory address here when deployed
-          # Example: - 0x5FbDB2315678afecb367f032d93F642f64180aa3
+        address:
+          - 0x5FbDB2315678afecb367f032d93F642f64180aa3
       - name: Market
-        # For dynamic contracts created by factory, we'll handle this differently
-        # Leave this empty and we'll use wildcard_tracking in the handler
+        # Markets are created dynamically
 
 # Unordered multichain mode for real-time indexing across chains
-unordered_multichain_mode: false
+unordered_multichain_mode: true
 
 # Preload optimization for faster indexing
 # Handlers will run twice, so use Effect API for external calls

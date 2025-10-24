@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { TrendingUp, Wallet, User } from 'lucide-react';
+import { User, Wallet } from 'lucide-react';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 
 const Header = () => {
   const location = useLocation();
@@ -25,6 +26,14 @@ const Header = () => {
               Markets
             </Link>
             <Link
+              to="/browse"
+              className={`text-sm font-medium transition-smooth ${
+                isActive('/browse') ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              Browse NFTs
+            </Link>
+            <Link
               to="/portfolio"
               className={`text-sm font-medium transition-smooth ${
                 isActive('/portfolio') ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
@@ -38,10 +47,78 @@ const Header = () => {
             <Button variant="ghost" size="icon" className="hidden md:flex">
               <User className="h-4 w-4" />
             </Button>
-            <Button size="sm" className="gap-2">
-              <Wallet className="h-4 w-4" />
-              <span className="hidden sm:inline">Connect</span>
-            </Button>
+            <ConnectButton.Custom>
+              {({
+                account,
+                chain,
+                openAccountModal,
+                openChainModal,
+                openConnectModal,
+                mounted,
+              }) => {
+                const ready = mounted;
+                const connected = ready && account && chain;
+
+                return (
+                  <div
+                    {...(!ready && {
+                      'aria-hidden': true,
+                      style: {
+                        opacity: 0,
+                        pointerEvents: 'none',
+                        userSelect: 'none',
+                      },
+                    })}
+                  >
+                    {(() => {
+                      if (!connected) {
+                        return (
+                          <Button size="sm" className="gap-2" onClick={openConnectModal}>
+                            <Wallet className="h-4 w-4" />
+                            <span className="hidden sm:inline">Connect</span>
+                          </Button>
+                        );
+                      }
+
+                      if (chain.unsupported) {
+                        return (
+                          <Button size="sm" variant="destructive" onClick={openChainModal}>
+                            Wrong network
+                          </Button>
+                        );
+                      }
+
+                      return (
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={openChainModal}
+                            className="gap-2"
+                          >
+                            {chain.hasIcon && chain.iconUrl && (
+                              <img
+                                alt={chain.name ?? 'Chain icon'}
+                                src={chain.iconUrl}
+                                className="h-4 w-4"
+                              />
+                            )}
+                            <span className="hidden sm:inline">{chain.name}</span>
+                          </Button>
+
+                          <Button size="sm" onClick={openAccountModal} className="gap-2">
+                            <Wallet className="h-4 w-4" />
+                            <span className="hidden sm:inline">
+                              {account.displayName}
+                            </span>
+                          </Button>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                );
+              }}
+            </ConnectButton.Custom>
           </div>
         </div>
       </div>

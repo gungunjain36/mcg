@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useQuery } from "@tanstack/react-query";
 import Header from '@/components/layout/Header';
 import MarketCard from '@/components/market/MarketCard';
+import MarketCardSkeleton from '@/components/market/MarketCardSkeleton';
+import CreateMarketModal from '@/components/market/CreateMarketModal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -21,27 +23,36 @@ const Home = () => {
 
   const { data: marketsData, isLoading: marketsLoading } = useQuery({
     queryKey: ["markets", 30],
-    queryFn: () => graph.getMarkets(30, 0),
+    queryFn: () => graph.getMarkets(30, 0, [{ createdAt: 'desc' }]),
+    refetchInterval: 10000, // Refetch every 10 seconds for real-time updates
   });
 
-  const marketsFromIndexer = marketsData?.markets ?? [];
-  const mappedMarkets = marketsFromIndexer.map((m) => ({
-    id: m.id,
-    question: m.question,
-    collectionSlug: m.collectionSlug,
-    collectionName: m.collectionSlug,
-    collectionImage: `/nfts/${m.collectionSlug || 'placeholder'}.png`,
-    targetPrice: Number(m.targetPrice),
-    currentFloorPrice: 0,
-    resolutionDate: '',
-    yesPrice: 0,
-    noPrice: 0,
-    totalVolume: Number(m.totalVolume),
-    totalLiquidity: 0,
-    creatorAddress: '',
-    resolved: m.status === 'Resolved',
-    outcome: undefined,
-  }));
+  const marketsFromIndexer = marketsData?.Market ?? [];
+  const mappedMarkets = marketsFromIndexer.map((m) => {
+    const yesShares = Number(m.yesSharesTotal) / 1e18;
+    const noShares = Number(m.noSharesTotal) / 1e18;
+    const totalShares = yesShares + noShares;
+    const yesPrice = totalShares > 0 ? yesShares / totalShares : 0.5;
+    const noPrice = totalShares > 0 ? noShares / totalShares : 0.5;
+    
+    return {
+      id: m.marketAddress,
+      question: m.question,
+      collectionSlug: m.collectionSlug,
+      collectionName: m.collectionSlug,
+      collectionImage: `/nfts/${m.collectionSlug || 'placeholder'}.png`,
+      targetPrice: Number(m.targetPrice) / 1e18,
+      currentFloorPrice: 0,
+      resolutionDate: new Date(Number(m.resolutionTimestamp) * 1000).toLocaleDateString(),
+      yesPrice,
+      noPrice,
+      totalVolume: Number(m.totalVolume) / 1e18,
+      totalLiquidity: totalShares,
+      creatorAddress: m.creator,
+      resolved: m.status === 'Resolved',
+      outcome: m.winningOutcome,
+    };
+  });
 
   const dataForUI = (marketsLoading ? [] : (mappedMarkets.length ? mappedMarkets : mockMarkets));
 
@@ -74,10 +85,7 @@ const Home = () => {
             </p>
             
             <div className="flex gap-3">
-              <Button size="sm">
-                <Plus className="h-4 w-4 mr-2" />
-                Create Market
-              </Button>
+              <CreateMarketModal />
               <Button size="sm" variant="outline">
                 View All
               </Button>
@@ -118,16 +126,26 @@ const Home = () => {
             </div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredMarkets.map((market) => (
-              <MarketCard key={market.id} market={market} />
-            ))}
-          </div>
-          
-          {filteredMarkets.length === 0 && (
-            <div className="text-center py-16">
-              <p className="text-muted-foreground">No markets found matching your criteria.</p>
+          {marketsLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <MarketCardSkeleton key={i} />
+              ))}
             </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredMarkets.map((market) => (
+                  <MarketCard key={market.id} market={market} />
+                ))}
+              </div>
+              
+              {filteredMarkets.length === 0 && (
+                <div className="text-center py-16">
+                  <p className="text-muted-foreground">No markets found matching your criteria.</p>
+                </div>
+              )}
+            </>
           )}
         </div>
       </section>
