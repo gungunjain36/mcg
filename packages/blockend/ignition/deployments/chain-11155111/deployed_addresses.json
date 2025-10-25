@@ -1,0 +1,5 @@
+{
+  "CoreModule#MarketFactory": "0x3Dec95F7B404758A6A525b27849EaF99f4DB8f7B",
+  "CoreModule#MockOracle": "0x7E78629aa2627883C0CD6d76F66A80Dc5c923A61",
+  "CoreModule#MarketResolver": "0x7414De90022FD6c71500ff0b9C2C544Fa79Af414"
+}

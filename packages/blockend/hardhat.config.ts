@@ -1,5 +1,7 @@
-import { HardhatUserConfig } from "hardhat/config"; // <-- Make sure this line is uncommented
-import "@nomicfoundation/hardhat-toolbox-viem"; // Use the correct toolbox for Hardhat 3 + Viem
+import { HardhatUserConfig } from "hardhat/config";
+import hardhatIgnition from "@nomicfoundation/hardhat-ignition";
+import hardhatNetworkHelpers from "@nomicfoundation/hardhat-network-helpers";
+import hardhatVerify from "@nomicfoundation/hardhat-verify";
 import "dotenv/config";
 
 const SEPOLIA_RPC_URL = process.env.SEPOLIA_RPC_URL || "https://rpc.sepolia.org";
@@ -8,21 +10,20 @@ const PRIVATE_KEY = process.env.PRIVATE_KEY?.startsWith('0x')
   ? process.env.PRIVATE_KEY 
   : (process.env.PRIVATE_KEY ? `0x${process.env.PRIVATE_KEY}` : "0x0000000000000000000000000000000000000000000000000000000000000000"); 
 
-const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY || "";
-
 // Apply the HardhatUserConfig type to ensure correctness
 const config: HardhatUserConfig = { 
   solidity: "0.8.24", // Match the version used in your contracts (e.g., Market.sol)
+  plugins: [hardhatIgnition, hardhatVerify, hardhatNetworkHelpers],
   networks: {
     sepolia: {
+      type: "http",
       url: SEPOLIA_RPC_URL,
       accounts: [PRIVATE_KEY],
-      chainId: 11155111, // <-- Explicitly add the Sepolia chain ID
+      chainId: 11155111,
     },
-    hardhat: {}, // Keep the local network config for testing
-  },
-  etherscan: {
-    apiKey: ETHERSCAN_API_KEY,
+    hardhat: {
+      type: "edr-simulated",
+    },
   },
   paths: {
     sources: "./contracts", // Your contracts are here

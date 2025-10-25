@@ -1,0 +1,42 @@
+{
+  "_format": "hh3-sol-build-info-1",
+  "id": "solc-0_8_24-be10617aa09941eb141f17dffeee6aabd2ac69d0",
+  "solcVersion": "0.8.24",
+  "solcLongVersion": "0.8.24+commit.e11b9ed9",
+  "userSourceNameMap": {
+    "contracts/mocks/MockOracle.sol": "project/contracts/mocks/MockOracle.sol"
+  },
+  "input": {
+    "language": "Solidity",
+    "settings": {
+      "evmVersion": "shanghai",
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "outputSelection": {
+        "*": {
+          "": [
+            "ast"
+          ],
+          "*": [
+            "abi",
+            "evm.bytecode",
+            "evm.deployedBytecode",
+            "evm.methodIdentifiers",
+            "metadata"
+          ]
+        }
+      },
+      "remappings": []
+    },
+    "sources": {
+      "project/contracts/interfaces/IOracle.sol": {
+        "content": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.24;\n\n/**\n * @title IOracle\n * @dev Interface for price oracle integration.\n * This interface allows for pluggable oracle solutions (Chainlink, UMA, custom).\n * For MVP, this will be implemented by a manual resolver, but can be upgraded\n * to use decentralized oracles like Chainlink Price Feeds or UMA Optimistic Oracle.\n */\ninterface IOracle {\n    /**\n     * @dev Fetches the floor price for a given NFT collection.\n     * @param collectionSlug The OpenSea collection slug (e.g., \"boredapeyachtclub\")\n     * @return price The floor price in ETH (scaled by 1e18)\n     * @return timestamp The timestamp of the price data\n     * @return isValid Whether the price data is valid and recent\n     */\n    function getFloorPrice(string memory collectionSlug) \n        external \n        view \n        returns (\n            uint256 price,\n            uint256 timestamp,\n            bool isValid\n        );\n\n    /**\n     * @dev Requests a floor price update for a collection.\n     * For off-chain oracles, this might trigger an API call.\n     * For on-chain oracles, this might trigger a Chainlink request.\n     * @param collectionSlug The collection to fetch price for\n     */\n    function requestPriceUpdate(string memory collectionSlug) external;\n\n    /**\n     * @dev Emitted when a price is updated.\n     */\n    event PriceUpdated(\n        string indexed collectionSlug,\n        uint256 price,\n        uint256 timestamp\n    );\n\n    /**\n     * @dev Emitted when a price update is requested.\n     */\n    event PriceUpdateRequested(\n        string indexed collectionSlug,\n        address indexed requester,\n        uint256 timestamp\n    );\n}\n\n\n"
+      },
+      "project/contracts/mocks/MockOracle.sol": {
+        "content": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.24;\n\nimport \"../interfaces/IOracle.sol\";\n\n/**\n * @title MockOracle\n * @dev Mock oracle for testing and development.\n * In production, this would be replaced with Chainlink, UMA, or a custom oracle.\n */\ncontract MockOracle is IOracle {\n    // Mapping of collection slug => price data\n    mapping(string => PriceData) public prices;\n    \n    struct PriceData {\n        uint256 price;\n        uint256 timestamp;\n        bool isValid;\n    }\n\n    address public owner;\n\n    modifier onlyOwner() {\n        require(msg.sender == owner, \"Only owner\");\n        _;\n    }\n\n    constructor() {\n        owner = msg.sender;\n    }\n\n    /**\n     * @dev Manually set a floor price (for testing).\n     * In production, this would be fetched from Chainlink or external API.\n     */\n    function setFloorPrice(\n        string memory collectionSlug,\n        uint256 price\n    ) external onlyOwner {\n        prices[collectionSlug] = PriceData({\n            price: price,\n            timestamp: block.timestamp,\n            isValid: true\n        });\n\n        emit PriceUpdated(collectionSlug, price, block.timestamp);\n    }\n\n    /**\n     * @dev Batch set multiple prices.\n     */\n    function setFloorPrices(\n        string[] memory collectionSlugs,\n        uint256[] memory _prices\n    ) external onlyOwner {\n        require(collectionSlugs.length == _prices.length, \"Length mismatch\");\n        \n        for (uint256 i = 0; i < collectionSlugs.length; i++) {\n            prices[collectionSlugs[i]] = PriceData({\n                price: _prices[i],\n                timestamp: block.timestamp,\n                isValid: true\n            });\n\n            emit PriceUpdated(collectionSlugs[i], _prices[i], block.timestamp);\n        }\n    }\n\n    /**\n     * @dev Implements IOracle.getFloorPrice\n     */\n    function getFloorPrice(string memory collectionSlug) \n        external \n        view \n        override\n        returns (\n            uint256 price,\n            uint256 timestamp,\n            bool isValid\n        ) \n    {\n        PriceData memory data = prices[collectionSlug];\n        return (data.price, data.timestamp, data.isValid);\n    }\n\n    /**\n     * @dev Implements IOracle.requestPriceUpdate\n     * In mock, this does nothing. In production, this would trigger an API call.\n     */\n    function requestPriceUpdate(string memory collectionSlug) external override {\n        emit PriceUpdateRequested(collectionSlug, msg.sender, block.timestamp);\n    }\n\n    /**\n     * @dev Invalidate a price (for testing failure scenarios).\n     */\n    function invalidatePrice(string memory collectionSlug) external onlyOwner {\n        prices[collectionSlug].isValid = false;\n    }\n}\n\n\n"
+      }
+    }
+  }
+}
