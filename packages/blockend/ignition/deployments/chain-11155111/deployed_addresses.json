@@ -1,5 +1,9 @@
 {
   "CoreModule#MarketFactory": "0x3Dec95F7B404758A6A525b27849EaF99f4DB8f7B",
   "CoreModule#MockOracle": "0x7E78629aa2627883C0CD6d76F66A80Dc5c923A61",
-  "CoreModule#MarketResolver": "0x7414De90022FD6c71500ff0b9C2C544Fa79Af414"
+  "CoreModule#MarketResolver": "0x7414De90022FD6c71500ff0b9C2C544Fa79Af414",
+  "CoreModuleV2#MarketFactory": "0xb5f2500b9613F738bA743e78eb9bD1a4eb698C59",
+  "CoreModuleV2#NftFloorOracle": "0x76f1AC8e32cF473E568Cb0Cc36eB410C3713ABeB",
+  "CoreModuleV2#FunctionsNftPriceConsumer": "0x1cFFE81F359A30679FfF3FaDEB778a98b3355F3f",
+  "CoreModuleV2#MarketResolver": "0x538119Fa5940cDE268f1cF33238f98FfaA62e67A"
 }
