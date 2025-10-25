@@ -6,39 +6,109 @@ export const MARKET_FACTORY_ABI = [
   {
     "anonymous": false,
     "inputs": [
-      { "indexed": true, "internalType": "address", "name": "marketAddress", "type": "address" },
-      { "indexed": true, "internalType": "address", "name": "creator", "type": "address" },
-      { "indexed": false, "internalType": "string", "name": "question", "type": "string" },
-      { "indexed": false, "internalType": "string", "name": "collectionSlug", "type": "string" },
-      { "indexed": false, "internalType": "uint256", "name": "targetPrice", "type": "uint256" },
-      { "indexed": false, "internalType": "uint256", "name": "resolutionTimestamp", "type": "uint256" }
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "marketAddress",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "creator",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "question",
+        "type": "string"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "collectionSlug",
+        "type": "string"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "targetPrice",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "resolutionTimestamp",
+        "type": "uint256"
+      }
     ],
     "name": "MarketCreated",
     "type": "event"
   },
   {
-    "inputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "name": "allMarkets",
-    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [
-      { "internalType": "string", "name": "_question", "type": "string" },
-      { "internalType": "string", "name": "_collectionSlug", "type": "string" },
-      { "internalType": "uint256", "name": "_targetPrice", "type": "uint256" },
-      { "internalType": "uint256", "name": "_resolutionTimestamp", "type": "uint256" }
+      {
+        "internalType": "string",
+        "name": "_question",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "_collectionSlug",
+        "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_targetPrice",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_resolutionTimestamp",
+        "type": "uint256"
+      }
     ],
     "name": "createMarket",
-    "outputs": [{ "internalType": "address", "name": "marketAddress", "type": "address" }],
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "marketAddress",
+        "type": "address"
+      }
+    ],
     "stateMutability": "payable",
     "type": "function"
   },
   {
     "inputs": [],
     "name": "getAllMarkets",
-    "outputs": [{ "internalType": "address[]", "name": "", "type": "address[]" }],
+    "outputs": [
+      {
+        "internalType": "address[]",
+        "name": "",
+        "type": "address[]"
+      }
+    ],
     "stateMutability": "view",
     "type": "function"
   }
@@ -52,6 +122,16 @@ export const MARKET_ABI = [
     "name": "buyShares",
     "outputs": [],
     "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "account", "type": "address" },
+      { "internalType": "uint256", "name": "id", "type": "uint256" }
+    ],
+    "name": "balanceOf",
+    "outputs": [ { "internalType": "uint256", "name": "", "type": "uint256" } ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -73,6 +153,13 @@ export const MARKET_ABI = [
     "name": "resolveMarket",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "bool", "name": "outcome", "type": "bool" }],
+    "name": "getSpotPrice",
+    "outputs": [{ "internalType": "uint256", "name": "price", "type": "uint256" }],
+    "stateMutability": "view",
     "type": "function"
   },
   {

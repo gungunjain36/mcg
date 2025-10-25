@@ -134,17 +134,16 @@ const MarketDetail = () => {
             </div>
           </div>
 
-          <div className="flex gap-3 mb-6">
-            <div className="flex-1 rounded border border-border p-4">
-              <div className="text-xs text-muted-foreground mb-1">YES</div>
-              <div className="text-2xl font-semibold">
+          <div className="grid grid-cols-2 gap-3 mb-6">
+            <div className="rounded border border-green-300/40 bg-green-500/10 p-4">
+              <div className="text-xs font-medium text-green-600 mb-1">YES</div>
+              <div className="text-2xl font-semibold text-green-700">
                 {(market.yesPrice * 100).toFixed(0)}¢
               </div>
             </div>
-            
-            <div className="flex-1 rounded border border-border p-4">
-              <div className="text-xs text-muted-foreground mb-1">NO</div>
-              <div className="text-2xl font-semibold">
+            <div className="rounded border border-red-300/40 bg-red-500/10 p-4">
+              <div className="text-xs font-medium text-red-600 mb-1">NO</div>
+              <div className="text-2xl font-semibold text-red-700">
                 {(market.noPrice * 100).toFixed(0)}¢
               </div>
             </div>
@@ -157,7 +156,7 @@ const MarketDetail = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column - Trading & History */}
           <div className="lg:col-span-2 space-y-6">
-            <TradeWidget market={market} marketAddress={marketAddress} />
+            <TradeWidget market={market} marketAddress={market.id} />
             <TradeHistory trades={marketTrades} />
             
             {/* Market Details */}
@@ -191,7 +190,20 @@ const MarketDetail = () => {
           </div>
           
           {/* Right Column - AI Chat */}
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 space-y-6">
+            <Card className="border-border p-6">
+              <div className="text-sm text-muted-foreground mb-2">Price Breakdown</div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded bg-green-500/10 p-3">
+                  <div className="text-xs text-green-600 mb-1">YES probability</div>
+                  <div className="text-lg font-semibold text-green-700">{(market.yesPrice * 100).toFixed(1)}%</div>
+                </div>
+                <div className="rounded bg-red-500/10 p-3">
+                  <div className="text-xs text-red-600 mb-1">NO probability</div>
+                  <div className="text-lg font-semibold text-red-700">{(market.noPrice * 100).toFixed(1)}%</div>
+                </div>
+              </div>
+            </Card>
             <AsiChatWidget />
           </div>
         </div>

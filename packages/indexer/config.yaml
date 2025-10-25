@@ -4,7 +4,7 @@ description: Prediction Markets Indexer for NFT Floor Prices
 
 contracts:
   - name: MarketFactory
-    abi_file_path: ./abi/CoreModule#MarketFactory.json
+    abi_file_path: ./abi/CoreModuleV4#MarketFactory.json
     handler: ./src/EventHandlers.ts
     events:
       - event: MarketCreated(address indexed marketAddress, address indexed creator, string question, string collectionSlug, uint256 targetPrice, uint256 resolutionTimestamp)
@@ -34,6 +34,18 @@ networks:
       - name: Market
         # Markets are created dynamically, will use wildcard tracking
         
+  # Base Sepolia testnet
+  - id: 84532
+    start_block: 0
+    rpc_config:
+      url: https://sepolia.base.org # @Web
+    contracts:
+      - name: MarketFactory
+        address:
+          - 0x25A57013bc5139E3FCb06189592652Cd146aecA5
+      - name: Market
+        # Markets are created dynamically
+
   # Local hardhat network for development
   - id: 31337
     start_block: 0

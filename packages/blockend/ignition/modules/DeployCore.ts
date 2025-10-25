@@ -1,6 +1,6 @@
 import { buildModule } from "@nomicfoundation/hardhat-ignition/modules";
 
-const CoreModule = buildModule("CoreModuleV2", (m) => {
+const CoreModule = buildModule("CoreModuleV4", (m) => {
   // Chainlink Functions config for Sepolia (can be overridden via parameters)
   const router = m.getParameter(
     "functionsRouter",

@@ -10,6 +10,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Search, TrendingUp, Plus } from 'lucide-react';
 import StatsCards from '@/components/dashboard/StatsCards';
 import { graph } from '@/lib/graphql';
+import { getCollectionDisplayInfo } from '@/lib/opensea';
 
 const Home = () => {
   const [filter, setFilter] = useState<'all' | 'active' | 'resolved'>('active');
@@ -31,6 +32,7 @@ const Home = () => {
     const yesShares = Number(m.yesSharesTotal) / 1e18;
     const noShares = Number(m.noSharesTotal) / 1e18;
     const totalShares = yesShares + noShares;
+    const display = getCollectionDisplayInfo(m.collectionSlug);
     
     // Calculate actual ETH price for YES and NO shares
     // Price represents probability (0-1 range) which equals ETH cost to buy 1 share
@@ -41,8 +43,8 @@ const Home = () => {
       id: m.marketAddress,
       question: m.question,
       collectionSlug: m.collectionSlug,
-      collectionName: m.collectionSlug,
-      collectionImage: `/nfts/${m.collectionSlug || 'placeholder'}.png`,
+      collectionName: display.name,
+      collectionImage: display.image,
       targetPrice: Number(m.targetPrice) / 1e18,
       currentFloorPrice: 0,
       resolutionDate: new Date(Number(m.resolutionTimestamp) * 1000).toLocaleDateString(),

@@ -23,6 +23,9 @@ const MarketCard = ({ market }: MarketCardProps) => {
             src={market.collectionImage}
             alt={market.collectionName}
             className="h-full w-full object-cover"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = '/nfts/placeholder.svg';
+            }}
           />
           {market.resolved && (
             <div className="absolute inset-0 bg-background/90 flex items-center justify-center">

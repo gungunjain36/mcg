@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -113,25 +113,25 @@ const CreateMarketModal = ({ onSuccess, preselectedCollection }: CreateMarketMod
       });
 
       toast.success('Market creation transaction submitted!');
-      
-      // Wait for confirmation
-      if (isConfirmed) {
-        toast.success('Market created successfully!');
-        
-        // Invalidate queries to refresh data immediately
-        queryClient.invalidateQueries({ queryKey: ['markets'] });
-        queryClient.invalidateQueries({ queryKey: ['globalStats'] });
-        queryClient.invalidateQueries({ queryKey: ['userPositions', address] });
-        
-        form.reset();
-        setOpen(false);
-        onSuccess?.();
-      }
     } catch (error: any) {
       console.error('Error creating market:', error);
       toast.error(error?.message || 'Failed to create market');
     }
   };
+
+  // On confirmation, refresh data and close modal
+  useEffect(() => {
+    if (!isConfirmed) return;
+    
+    toast.success('Market created successfully!');
+    queryClient.invalidateQueries({ queryKey: ['markets'] });
+    queryClient.invalidateQueries({ queryKey: ['globalStats'] });
+    queryClient.invalidateQueries({ queryKey: ['userPositions', address] });
+    form.reset();
+    setOpen(false);
+    onSuccess?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isConfirmed]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

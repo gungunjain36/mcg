@@ -1,5 +1,6 @@
 import { getDefaultConfig } from '@rainbow-me/rainbowkit';
 import { hardhat, sepolia, mainnet } from 'wagmi/chains';
+import { defineChain } from 'viem';
 
 // IMPORTANT: Get your WalletConnect Project ID from https://cloud.walletconnect.com/
 // Replace 'YOUR_PROJECT_ID' with your actual project ID
@@ -10,8 +11,19 @@ export const config = getDefaultConfig({
   appName: 'NFT Prediction Markets',
   projectId: WALLETCONNECT_PROJECT_ID,
   chains: [
-    hardhat,
     sepolia,
+    defineChain({
+      id: 84532,
+      name: 'Base Sepolia',
+      nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+      rpcUrls: {
+        default: { http: ['https://sepolia.base.org'] }, // @Web
+      },
+      blockExplorers: {
+        default: { name: 'Base Sepolia Explorer', url: 'https://sepolia-explorer.base.org' },
+      },
+      testnet: true,
+    }),
     ...(import.meta.env.MODE === 'production' ? [mainnet] : []),
   ],
   ssr: false,
@@ -26,6 +38,10 @@ export const CONTRACTS = {
   // Sepolia testnet
   11155111: {
     MarketFactory: '0xb5f2500b9613F738bA743e78eb9bD1a4eb698C59', // Updated Sepolia address
+  },
+  // Base Sepolia testnet
+  84532: {
+    MarketFactory: '0x25A57013bc5139E3FCb06189592652Cd146aecA5', // fill after deploying to Base Sepolia
   },
   // Mainnet
   1: {
