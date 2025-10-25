@@ -23,22 +23,22 @@ contracts:
 
 networks:
   # Sepolia testnet - main network for testing
-  - id: 11155111
-    start_block: 0
-    hypersync_config:
-      url: https://sepolia.hypersync.xyz
-    contracts:
-      - name: MarketFactory
-        address:
-          - 0xb5f2500b9613f738ba743e78eb9bd1a4eb698c59
-      - name: Market
-        # Markets are created dynamically, will use wildcard tracking
+  # - id: 11155111
+  #   start_block: 0
+  #   hypersync_config:
+  #     url: https://sepolia.hypersync.xyz
+  #   contracts:
+  #     - name: MarketFactory
+  #       address:
+  #         - 0xb5f2500b9613f738ba743e78eb9bd1a4eb698c59
+  #     - name: Market
+  #       # Markets are created dynamically, will use wildcard tracking
         
   # Base Sepolia testnet
   - id: 84532
     start_block: 0
-    rpc_config:
-      url: https://sepolia.base.org # @Web
+    hypersync_config:
+      url: https://base-sepolia.hypersync.xyz
     contracts:
       - name: MarketFactory
         address:
@@ -47,16 +47,16 @@ networks:
         # Markets are created dynamically
 
   # Local hardhat network for development
-  - id: 31337
-    start_block: 0
-    rpc_config:
-      url: http://127.0.0.1:8545
-    contracts:
-      - name: MarketFactory
-        address:
-          - 0x5FbDB2315678afecb367f032d93F642f64180aa3
-      - name: Market
-        # Markets are created dynamically
+  # - id: 31337
+  #   start_block: 0
+  #   rpc_config:
+  #     url: http://127.0.0.1:8545
+  #   contracts:
+  #     - name: MarketFactory
+  #       address:
+  #         - 0x5FbDB2315678afecb367f032d93F642f64180aa3
+  #     - name: Market
+  #       # Markets are created dynamically
 
 # Unordered multichain mode for real-time indexing across chains
 unordered_multichain_mode: true
