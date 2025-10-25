@@ -143,9 +143,7 @@ MarketContract.Trade.handler(async ({ event, context }) => {
   const outcome = event.params.outcome;
   const shareAmount = event.params.shareAmount;
   const ethAmount = event.params.ethAmount;
-  // Infer buy/sell based on transaction value (buyShares is payable, sellShares is not)
-  const txValue = event.transaction?.value ?? BigInt(0);
-  const isBuyTrade = txValue > BigInt(0);
+  const isBuyTrade = event.params.isBuy; // Now directly from event params
 
   // Update totals by adding on buy and subtracting on sell
   const signedDelta = isBuyTrade ? shareAmount : -shareAmount;
@@ -202,7 +200,8 @@ MarketContract.Trade.handler(async ({ event, context }) => {
     ...position,
     yesShares: outcome ? position.yesShares + signedDelta : position.yesShares,
     noShares: !outcome ? position.noShares + signedDelta : position.noShares,
-    totalInvested: position.totalInvested + ethAmount,
+    totalInvested: isBuyTrade ? position.totalInvested + ethAmount : position.totalInvested,
+    realizedPnL: isBuyTrade ? position.realizedPnL : position.realizedPnL + ethAmount,
     updatedAt: timestamp,
   };
   context.Position.set(updatedPosition);
@@ -241,4 +240,83 @@ MarketContract.MarketResolved.handler(async ({ event, context }) => {
     resolvedAt: timestamp,
   };
   context.Market.set(updatedMarket);
+});
+
+// Handler for SharesRedeemed event
+MarketContract.SharesRedeemed.handler(async ({ event, context }) => {
+  const marketAddress = event.srcAddress.toLowerCase();
+  const userAddress = event.params.user.toLowerCase();
+  const timestamp = BigInt(event.block.timestamp);
+
+  // Get position
+  const position = await getOrCreatePosition(context, marketAddress, userAddress, timestamp);
+  
+  // Update position with redeemed shares
+  // The user has redeemed their winning shares, so we clear their shares and update realized P&L
+  const updatedPosition: Position = {
+    ...position,
+    yesShares: BigInt(0),
+    noShares: BigInt(0),
+    realizedPnL: position.realizedPnL + event.params.ethReceived,
+    updatedAt: timestamp,
+  };
+  context.Position.set(updatedPosition);
+
+  // Update user
+  const user = await getOrCreateUser(context, userAddress, timestamp);
+  const updatedUser: User = {
+    ...user,
+    updatedAt: timestamp,
+  };
+  context.User.set(updatedUser);
+});
+
+// Handler for LiquidityProvided event (when market is created with initial liquidity)
+MarketContract.LiquidityProvided.handler(async ({ event, context }) => {
+  const marketAddress = event.srcAddress.toLowerCase();
+  const providerAddress = event.params.provider.toLowerCase();
+  const timestamp = BigInt(event.block.timestamp);
+
+  // Get or create position for the liquidity provider
+  const position = await getOrCreatePosition(context, marketAddress, providerAddress, timestamp);
+
+  // Update position with initial liquidity shares
+  const updatedPosition: Position = {
+    ...position,
+    yesShares: position.yesShares + event.params.initialYesShares,
+    noShares: position.noShares + event.params.initialNoShares,
+    totalInvested: position.totalInvested + event.params.ethAmount,
+    updatedAt: timestamp,
+  };
+  context.Position.set(updatedPosition);
+
+  // Update user
+  const user = await getOrCreateUser(context, providerAddress, timestamp);
+  const updatedUser: User = {
+    ...user,
+    totalVolume: user.totalVolume + event.params.ethAmount,
+    updatedAt: timestamp,
+  };
+  context.User.set(updatedUser);
+
+  // Update market with initial liquidity
+  const market = await context.Market.get(marketAddress);
+  if (market) {
+    const updatedMarket: MarketEntity = {
+      ...market,
+      yesSharesTotal: market.yesSharesTotal + event.params.initialYesShares,
+      noSharesTotal: market.noSharesTotal + event.params.initialNoShares,
+      totalVolume: market.totalVolume + event.params.ethAmount,
+    };
+    context.Market.set(updatedMarket);
+  }
+
+  // Update global stats
+  const stats = await getOrCreateGlobalStats(context);
+  const updatedStats: GlobalStats = {
+    ...stats,
+    totalVolume: stats.totalVolume + event.params.ethAmount,
+    updatedAt: timestamp,
+  };
+  context.GlobalStats.set(updatedStats);
 });

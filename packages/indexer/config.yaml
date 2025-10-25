@@ -4,21 +4,22 @@ description: Prediction Markets Indexer for NFT Floor Prices
 
 contracts:
   - name: MarketFactory
-    abi_file_path: ./abi/MarketFactory.json
+    abi_file_path: ./abi/CoreModule#MarketFactory.json
     handler: ./src/EventHandlers.ts
     events:
       - event: MarketCreated(address indexed marketAddress, address indexed creator, string question, string collectionSlug, uint256 targetPrice, uint256 resolutionTimestamp)
   
   - name: Market
-    abi_file_path: ./abi/Market.json
+    abi_file_path: ./abi/CoreModule#MarketFactory.json
     handler: ./src/EventHandlers.ts
     events:
-      - event: Trade(address indexed user, bool indexed outcome, uint256 ethAmount, uint256 shareAmount)
+      - event: Trade(address indexed user, bool indexed outcome, uint256 ethAmount, uint256 shareAmount, bool isBuy)
         field_selection:
           transaction_fields:
             - hash
-            - value
       - event: MarketResolved(bool winningOutcome, uint256 finalReportedPrice)
+      - event: SharesRedeemed(address indexed user, uint256 sharesRedeemed, uint256 ethReceived)
+      - event: LiquidityProvided(address indexed provider, uint256 initialYesShares, uint256 initialNoShares, uint256 ethAmount)
 
 networks:
   # Sepolia testnet - main network for testing
