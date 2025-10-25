@@ -25,7 +25,7 @@ export const CONTRACTS = {
   },
   // Sepolia testnet
   11155111: {
-    MarketFactory: '0x84ace9de871cdca72aed2df45ef03f92ed643083', // Deployed on Sepolia
+    MarketFactory: '0xb5f2500b9613F738bA743e78eb9bD1a4eb698C59', // Updated Sepolia address
   },
   // Mainnet
   1: {

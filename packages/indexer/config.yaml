@@ -29,7 +29,7 @@ networks:
     contracts:
       - name: MarketFactory
         address:
-          - 0x84ace9de871cdca72aed2df45ef03f92ed643083
+          - 0xb5f2500b9613f738ba743e78eb9bd1a4eb698c59
       - name: Market
         # Markets are created dynamically, will use wildcard tracking
         
