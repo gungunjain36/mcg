@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Search, TrendingUp, Plus } from 'lucide-react';
-import { mockMarkets } from '@/lib/mockData';
 import StatsCards from '@/components/dashboard/StatsCards';
 import { graph } from '@/lib/graphql';
 
@@ -24,7 +23,7 @@ const Home = () => {
   const { data: marketsData, isLoading: marketsLoading } = useQuery({
     queryKey: ["markets", 30],
     queryFn: () => graph.getMarkets(30, 0, [{ createdAt: 'desc' }]),
-    refetchInterval: 10000, // Refetch every 10 seconds for real-time updates
+    refetchInterval: 300000, // Refetch every 5 minutes
   });
 
   const marketsFromIndexer = marketsData?.Market ?? [];
@@ -32,6 +31,9 @@ const Home = () => {
     const yesShares = Number(m.yesSharesTotal) / 1e18;
     const noShares = Number(m.noSharesTotal) / 1e18;
     const totalShares = yesShares + noShares;
+    
+    // Calculate actual ETH price for YES and NO shares
+    // Price represents probability (0-1 range) which equals ETH cost to buy 1 share
     const yesPrice = totalShares > 0 ? yesShares / totalShares : 0.5;
     const noPrice = totalShares > 0 ? noShares / totalShares : 0.5;
     
@@ -44,8 +46,8 @@ const Home = () => {
       targetPrice: Number(m.targetPrice) / 1e18,
       currentFloorPrice: 0,
       resolutionDate: new Date(Number(m.resolutionTimestamp) * 1000).toLocaleDateString(),
-      yesPrice,
-      noPrice,
+      yesPrice, // ETH price per share
+      noPrice, // ETH price per share
       totalVolume: Number(m.totalVolume) / 1e18,
       totalLiquidity: totalShares,
       creatorAddress: m.creator,
@@ -54,7 +56,8 @@ const Home = () => {
     };
   });
 
-  const dataForUI = (marketsLoading ? [] : (mappedMarkets.length ? mappedMarkets : mockMarkets));
+  // Show ONLY real data from indexer - no mock data fallback
+  const dataForUI = mappedMarkets;
 
   const filteredMarkets = dataForUI.filter((market) => {
     const matchesFilter =

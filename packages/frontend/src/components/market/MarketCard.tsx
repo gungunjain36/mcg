@@ -45,14 +45,14 @@ const MarketCard = ({ market }: MarketCardProps) => {
             <div className="rounded border border-border p-2">
               <div className="text-xs text-muted-foreground mb-1">YES</div>
               <div className="text-base font-semibold">
-                {(market.yesPrice * 100).toFixed(0)}¢
+                {market.yesPrice.toFixed(3)} ETH
               </div>
             </div>
             
             <div className="rounded border border-border p-2">
               <div className="text-xs text-muted-foreground mb-1">NO</div>
               <div className="text-base font-semibold">
-                {(market.noPrice * 100).toFixed(0)}¢
+                {market.noPrice.toFixed(3)} ETH
               </div>
             </div>
           </div>

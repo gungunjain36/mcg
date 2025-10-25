@@ -9,7 +9,6 @@ import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ExternalLink } from 'lucide-react';
-import { mockMarkets, mockTrades } from '@/lib/mockData';
 import { getFloorPrice, getCollectionDisplayInfo } from '@/lib/opensea';
 import { graph } from '@/lib/graphql';
 
@@ -21,7 +20,7 @@ const MarketDetail = () => {
     queryKey: ['market', id],
     queryFn: () => graph.getMarketById(id || ''),
     enabled: !!id,
-    refetchInterval: 5000, // Refetch every 5 seconds for real-time updates
+    refetchInterval: 300000, // Refetch every 5 minutes
   });
 
   // Fetch market trades from indexer
@@ -29,7 +28,7 @@ const MarketDetail = () => {
     queryKey: ['marketTrades', id],
     queryFn: () => graph.getMarketTrades(id || '', 100, 0),
     enabled: !!id,
-    refetchInterval: 5000,
+    refetchInterval: 300000, // Refetch every 5 minutes
   });
   
   const marketFromIndexer = marketData?.market;
@@ -43,10 +42,7 @@ const MarketDetail = () => {
     refetchInterval: 60000, // Refetch every minute
   });
   
-  // Fallback to mock data if indexer data isn't available
-  const mockMarket = mockMarkets.find((m) => m.id === id);
-  
-  // Create market object from indexer data or fallback to mock
+  // Create market object from indexer data only (no mock data)
   const market = marketFromIndexer ? (() => {
     const yesShares = Number(marketFromIndexer.yesSharesTotal) / 1e18;
     const noShares = Number(marketFromIndexer.noSharesTotal) / 1e18;
@@ -71,7 +67,7 @@ const MarketDetail = () => {
       resolved: marketFromIndexer.status === 'Resolved',
       outcome: marketFromIndexer.winningOutcome,
     };
-  })() : mockMarket;
+  })() : null;
   
   if (isLoadingMarket) {
     return (
@@ -97,7 +93,7 @@ const MarketDetail = () => {
     );
   }
   
-  // Map indexer trades to UI format
+  // Map indexer trades to UI format (no mock data fallback)
   const marketTrades = tradesData?.Trade ? tradesData.Trade.map(t => ({
     id: t.id,
     marketId: t.market_id,
@@ -107,7 +103,7 @@ const MarketDetail = () => {
     shares: Number(t.shareAmount) / 1e18,
     price: Number(t.ethAmount) / 1e18,
     timestamp: new Date(Number(t.timestamp) * 1000).toISOString(),
-  })) : mockTrades.filter((t) => t.marketId === market.id);
+  })) : [];
   
   return (
     <div className="min-h-screen">

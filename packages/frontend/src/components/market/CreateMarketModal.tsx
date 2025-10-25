@@ -28,6 +28,7 @@ import { searchCollections, type NFTCollection } from '@/lib/opensea';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { useAccount } from 'wagmi';
+import { useQueryClient } from '@tanstack/react-query';
 
 const formSchema = z.object({
   question: z.string().min(10, 'Question must be at least 10 characters'),
@@ -55,7 +56,8 @@ const CreateMarketModal = ({ onSuccess, preselectedCollection }: CreateMarketMod
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<NFTCollection[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-  const { isConnected } = useAccount();
+  const { isConnected, address } = useAccount();
+  const queryClient = useQueryClient();
   
   const { createMarket, isPending, isConfirming, isConfirmed } = useCreateMarket();
 
@@ -115,6 +117,12 @@ const CreateMarketModal = ({ onSuccess, preselectedCollection }: CreateMarketMod
       // Wait for confirmation
       if (isConfirmed) {
         toast.success('Market created successfully!');
+        
+        // Invalidate queries to refresh data immediately
+        queryClient.invalidateQueries({ queryKey: ['markets'] });
+        queryClient.invalidateQueries({ queryKey: ['globalStats'] });
+        queryClient.invalidateQueries({ queryKey: ['userPositions', address] });
+        
         form.reset();
         setOpen(false);
         onSuccess?.();

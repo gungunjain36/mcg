@@ -1,5 +1,7 @@
-import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useState, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
+import { useAccount } from 'wagmi';
 import Header from '@/components/layout/Header';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
@@ -15,16 +17,19 @@ import {
   type NFTCollection,
 } from '@/lib/opensea';
 import CreateMarketModal from '@/components/market/CreateMarketModal';
+import { toast } from 'sonner';
 
 const BrowseCollections = () => {
+  const navigate = useNavigate();
+  const { address } = useAccount();
+  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCollection, setSelectedCollection] = useState<TrendingCollection | NFTCollection | null>(null);
-  const [showCreateModal, setShowCreateModal] = useState(false);
 
-  // Fetch trending collections
+  // Fetch trending collections - increased to 20
   const { data: trendingData, isLoading: isTrendingLoading } = useQuery({
     queryKey: ['trending-collections'],
-    queryFn: () => getTrendingCollections(8),
+    queryFn: () => getTrendingCollections(20),
     staleTime: 300000, // 5 minutes
   });
 
@@ -45,9 +50,28 @@ const BrowseCollections = () => {
 
   const displayCollections = searchQuery.length > 2 ? searchResults : allCollections;
 
+  // Sync modal state with selected collection
+  useEffect(() => {
+    if (selectedCollection) {
+      // Modal will open when selectedCollection is set
+    }
+  }, [selectedCollection]);
+
   const handleCreateMarket = (collection: TrendingCollection | NFTCollection) => {
     setSelectedCollection(collection);
-    setShowCreateModal(true);
+  };
+
+  const handleMarketCreated = () => {
+    toast.success('Market created! Check your Portfolio to see your position.');
+    
+    // Invalidate queries to refresh data immediately
+    queryClient.invalidateQueries({ queryKey: ['markets'] });
+    queryClient.invalidateQueries({ queryKey: ['globalStats'] });
+    queryClient.invalidateQueries({ queryKey: ['userPositions', address] });
+    
+    setSelectedCollection(null);
+    // Optionally navigate to markets page or portfolio
+    // navigate('/');
   };
 
   return (
@@ -88,7 +112,7 @@ const BrowseCollections = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {trendingData?.slice(0, 4).map((collection) => (
+              {trendingData?.map((collection) => (
                 <Card
                   key={collection.collection}
                   className="border-border hover:border-foreground/20 transition-smooth overflow-hidden group cursor-pointer"
@@ -252,10 +276,7 @@ const BrowseCollections = () => {
             floor_price: 'floor_price' in selectedCollection ? selectedCollection.floor_price : 0,
             floor_price_symbol: 'floor_price_symbol' in selectedCollection ? selectedCollection.floor_price_symbol : 'ETH',
           }}
-          onSuccess={() => {
-            setShowCreateModal(false);
-            setSelectedCollection(null);
-          }}
+          onSuccess={handleMarketCreated}
         />
       )}
     </div>

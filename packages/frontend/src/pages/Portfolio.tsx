@@ -3,7 +3,6 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { TrendingUp, TrendingDown, ArrowRight, Wallet } from 'lucide-react';
-import { mockMarkets, mockPositions } from '@/lib/mockData';
 import { Link } from 'react-router-dom';
 import { useAccount } from 'wagmi';
 import { useQuery } from '@tanstack/react-query';
@@ -18,7 +17,7 @@ const Portfolio = () => {
     queryKey: ['userPositions', address],
     queryFn: () => graph.getUserPositions(address || ''),
     enabled: !!address && isConnected,
-    refetchInterval: 10000,
+    refetchInterval: 300000, // Refetch every 5 minutes
   });
   
   // Fetch markets data to get current prices
