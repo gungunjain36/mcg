@@ -1,57 +1,46 @@
-# Sample Hardhat 3 Beta Project (`node:test` and `viem`)
+# Blockend (Hardhat 3 + Ignition + Chainlink Functions)
 
-This project showcases a Hardhat 3 Beta project using the native Node.js test runner (`node:test`) and the `viem` library for Ethereum interactions.
+This package contains the smart contracts and deployment scripts for the NFT prediction markets backend. It uses Hardhat 3, Ignition for deployments, and Chainlink Functions to fetch OpenSea floor prices on-demand (no cron).
 
-To learn more about the Hardhat 3 Beta, please visit the [Getting Started guide](https://hardhat.org/docs/getting-started#getting-started-with-hardhat-3). To share your feedback, join our [Hardhat 3 Beta](https://hardhat.org/hardhat3-beta-telegram-group) Telegram group or [open an issue](https://github.com/NomicFoundation/hardhat/issues/new) in our GitHub issue tracker.
+References:
+- Hardhat 3 Getting Started: https://hardhat.org/docs/getting-started
+- Chainlink Functions (Sepolia router/DON): https://docs.chain.link/chainlink-functions/getting-started
 
-## Project Overview
+## Prerequisites
 
-This example project includes:
+- Node.js v20, pnpm
+- Funded Sepolia wallet (ETH + LINK)
+- Optional: OpenSea API key (recommended to avoid rate limits)
 
-- A simple Hardhat configuration file.
-- Foundry-compatible Solidity unit tests.
-- TypeScript integration tests using [`node:test`](nodejs.org/api/test.html), the new Node.js native test runner, and [`viem`](https://viem.sh/).
-- Examples demonstrating how to connect to different types of networks, including locally simulating OP mainnet.
+Environment variables (examples):
+- `SEPOLIA_RPC_URL=https://sepolia.infura.io/v3/<KEY>`
+- `PRIVATE_KEY=0x...` (deployer EOA, 0x-prefixed)
+- Frontend: `VITE_WALLETCONNECT_PROJECT_ID=...`
 
-## Usage
+## Deployed Contracts (Sepolia)
 
-### Running Tests
+Current deployment addresses:
+- `MarketFactory`: `0xb5f2500b9613F738bA743e78eb9bD1a4eb698C59`
+- `NftFloorOracle`: `0x76f1AC8e32cF473E568Cb0Cc36eB410C3713ABeB`
+- `FunctionsNftPriceConsumer`: `0x1cFFE81F359A30679FfF3FaDEB778a98b3355F3f`
+- `MarketResolver`: `0x538119Fa5940cDE268f1cF33238f98FfaA62e67A`
 
-To run all the tests in the project, execute the following command:
 
-```shell
-npx hardhat test
-```
+## Contracts
 
-You can also selectively run the Solidity or `node:test` tests:
+- `NftFloorOracle.sol`: On-chain store for collection floor prices with freshness and `REPORTER_ROLE`.
+- `FunctionsNftPriceConsumer.sol`: Chainlink Functions consumer that calls OpenSea v2 collections stats API and writes to `NftFloorOracle`.
+- `MarketResolver.sol`: Supports `resolveMarketWithOracle(market)` using the oracle's latest price.
+- `MarketFactory.sol` / `Market.sol`: Market creation and lifecycle.
 
-```shell
-npx hardhat test solidity
-npx hardhat test nodejs
-```
+## Deploy (Ignition)
 
-### Make a deployment to Sepolia
+Ignition module: `ignition/modules/DeployCore.ts` (module id: `CoreModuleV2`). It deploys and wires:
+- `NftFloorOracle`
+- `FunctionsNftPriceConsumer(router, donId, oracle)` and grants it `REPORTER_ROLE`
+- `MarketResolver(oracle)`
+- `MarketFactory`
 
-This project includes an example Ignition module to deploy the contract. You can deploy this module to a locally simulated chain or to Sepolia.
+Sepolia defaults are embedded; you can override with a params file.
 
-To run the deployment to a local chain:
-
-```shell
-npx hardhat ignition deploy ignition/modules/MarketFactory.ts
-```
-
-To run the deployment to Sepolia, you need an account with funds to send the transaction. The provided Hardhat configuration includes a Configuration Variable called `SEPOLIA_PRIVATE_KEY`, which you can use to set the private key of the account you want to use.
-
-You can set the `SEPOLIA_PRIVATE_KEY` variable using the `hardhat-keystore` plugin or by setting it as an environment variable.
-
-To set the `SEPOLIA_PRIVATE_KEY` config variable using `hardhat-keystore`:
-
-```shell
-npx hardhat keystore set SEPOLIA_PRIVATE_KEY
-```
-
-After setting the variable, you can run the deployment with the Sepolia network:
-
-```shell
-npx hardhat ignition deploy --network sepolia ignition/modules/Counter.ts
-```
+Deploy using defaults:
