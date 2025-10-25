@@ -11,6 +11,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ExternalLink } from 'lucide-react';
 import { getFloorPrice, getCollectionDisplayInfo } from '@/lib/opensea';
 import { graph } from '@/lib/graphql';
+import { useOnchainMarketTotals, useRecentTradesOnchain } from '@/hooks/useOnchainFallback';
 
 const MarketDetail = () => {
   const { id } = useParams();
@@ -33,6 +34,7 @@ const MarketDetail = () => {
   
   const marketFromIndexer = marketData?.market;
   const collectionSlug = marketFromIndexer?.collectionSlug || '';
+  const marketAddress = marketFromIndexer?.marketAddress || id;
   
   // Fetch OpenSea floor price
   const { data: floorPrice, isLoading: isLoadingFloor } = useQuery({
@@ -42,10 +44,16 @@ const MarketDetail = () => {
     refetchInterval: 60000, // Refetch every minute
   });
   
-  // Create market object from indexer data only (no mock data)
+  // On-chain fallback: totals and recent trades
+  const onchainTotals = useOnchainMarketTotals(marketAddress);
+  const onchainTrades = useRecentTradesOnchain(marketAddress, 50);
+
+  // Create market object (prefer indexer; fallback to on-chain totals)
   const market = marketFromIndexer ? (() => {
-    const yesShares = Number(marketFromIndexer.yesSharesTotal) / 1e18;
-    const noShares = Number(marketFromIndexer.noSharesTotal) / 1e18;
+    const yesSharesIndexer = Number(marketFromIndexer.yesSharesTotal) / 1e18;
+    const noSharesIndexer = Number(marketFromIndexer.noSharesTotal) / 1e18;
+    const yesShares = onchainTotals?.yes ?? yesSharesIndexer;
+    const noShares = onchainTotals?.no ?? noSharesIndexer;
     const totalShares = yesShares + noShares;
     const yesPrice = totalShares > 0 ? yesShares / totalShares : 0.5;
     const noPrice = totalShares > 0 ? noShares / totalShares : 0.5;
@@ -93,17 +101,23 @@ const MarketDetail = () => {
     );
   }
   
-  // Map indexer trades to UI format (no mock data fallback)
-  const marketTrades = tradesData?.Trade ? tradesData.Trade.map(t => ({
-    id: t.id,
-    marketId: t.market_id,
-    userAddress: t.user_id,
-    outcome: t.outcome ? 'yes' : 'no',
-    type: t.isBuy ? 'buy' : 'sell',
-    shares: Number(t.shareAmount) / 1e18,
-    price: Number(t.ethAmount) / 1e18,
-    timestamp: new Date(Number(t.timestamp) * 1000).toISOString(),
-  })) : [];
+  // Trades: prefer indexer, fallback to on-chain logs
+  const tradesFromIndexer = tradesData?.Trade ? tradesData.Trade.map(t => {
+    const amountEth = Number(t.ethAmount) / 1e18;
+    const shares = Number(t.shareAmount) / 1e18;
+    const unitPrice = shares > 0 ? (amountEth / shares) : 0;
+    return {
+      id: t.id,
+      marketId: t.market_id,
+      trader: t.user_id,
+      outcome: t.outcome ? 'YES' : 'NO',
+      type: t.isBuy ? 'BUY' : 'SELL',
+      amount: amountEth,
+      price: unitPrice,
+      timestamp: new Date(Number(t.timestamp) * 1000).toISOString(),
+    };
+  }) : [];
+  const marketTrades = tradesFromIndexer.length > 0 ? tradesFromIndexer : onchainTrades;
   
   return (
     <div className="min-h-screen">

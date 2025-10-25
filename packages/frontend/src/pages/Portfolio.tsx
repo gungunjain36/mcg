@@ -8,6 +8,7 @@ import { useAccount } from 'wagmi';
 import { useQuery } from '@tanstack/react-query';
 import { graph } from '@/lib/graphql';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useOnchainPortfolioFallback } from '@/hooks/useOnchainFallback';
 
 const Portfolio = () => {
   const { address, isConnected } = useAccount();
@@ -28,8 +29,9 @@ const Portfolio = () => {
   
   const positions = positionsData?.Position || [];
   const markets = marketsData?.Market || [];
+  const onchainFallback = useOnchainPortfolioFallback(address);
   
-  const activePositions = positions.map((position) => {
+  const activePositions = (positions.length > 0 ? positions : []).map((position) => {
     const market = markets.find((m) => m.marketAddress === position.market_id);
     if (!market) return null;
     
@@ -74,9 +76,43 @@ const Portfolio = () => {
       profitPercent,
     };
   }).filter(Boolean);
+
+  // If indexer returned no positions, fall back to on-chain discovered positions
+  const activePositionsFallback = positions.length > 0 ? activePositions : onchainFallback.map((p) => {
+    const yesValue = p.yesShares * p.yesPrice;
+    const noValue = p.noShares * p.noPrice;
+    const totalValue = yesValue + noValue;
+    const profit = totalValue; // Without indexer, we can't compute invested/realized; show value only
+    const profitPercent = '0';
+
+    return {
+      position: {
+        marketId: p.marketAddress,
+        yesShares: p.yesShares,
+        noShares: p.noShares,
+        avgYesPrice: p.yesPrice,
+        avgNoPrice: p.noPrice,
+      },
+      market: {
+        id: p.marketAddress,
+        question: p.question,
+        collectionSlug: p.collectionSlug,
+        collectionName: p.collectionSlug,
+        collectionImage: `/nfts/${p.collectionSlug || 'placeholder'}.png`,
+        yesPrice: p.yesPrice,
+        noPrice: p.noPrice,
+        resolved: p.resolved,
+      },
+      totalValue,
+      profit,
+      profitPercent,
+    };
+  });
+
+  const displayPositions = positions.length > 0 ? activePositions : activePositionsFallback;
   
-  const totalPortfolioValue = activePositions.reduce((sum, item) => sum + (item?.totalValue || 0), 0);
-  const totalProfit = activePositions.reduce((sum, item) => sum + (item?.profit || 0), 0);
+  const totalPortfolioValue = displayPositions.reduce((sum, item) => sum + (item?.totalValue || 0), 0);
+  const totalProfit = displayPositions.reduce((sum, item) => sum + (item?.profit || 0), 0);
   
   return (
     <div className="min-h-screen">
@@ -112,7 +148,7 @@ const Portfolio = () => {
         <div className="mb-8">
           <h2 className="text-xl font-semibold mb-4">Active Positions</h2>
           
-          {activePositions.length === 0 ? (
+          {displayPositions.length === 0 ? (
             <Card className="border-border p-12 text-center">
               <div className="max-w-md mx-auto">
                 <h3 className="text-lg font-semibold mb-2">No Active Positions</h3>
@@ -126,7 +162,7 @@ const Portfolio = () => {
             </Card>
           ) : (
             <div className="space-y-4">
-              {activePositions.map((item) => {
+              {displayPositions.map((item) => {
                 if (!item) return null;
                 const { position, market, totalValue, profit, profitPercent } = item;
                 

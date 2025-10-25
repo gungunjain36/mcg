@@ -4,6 +4,8 @@ import {
   useWaitForTransactionReceipt,
   useAccount,
 } from 'wagmi';
+import { useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { parseEther, formatEther, type Address } from 'viem';
 import { MARKET_ABI } from '@/lib/contracts';
 
@@ -175,6 +177,8 @@ export function useUserShares(marketAddress: string | undefined) {
  */
 export function useBuyShares(marketAddress: string | undefined) {
   const { data: hash, writeContract, isPending, error } = useWriteContract();
+  const { address } = useAccount();
+  const queryClient = useQueryClient();
 
   const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
     hash,
@@ -194,6 +198,21 @@ export function useBuyShares(marketAddress: string | undefined) {
     });
   };
 
+  useEffect(() => {
+    if (isConfirmed && marketAddress) {
+      // Refresh market stats and trades for this market
+      queryClient.invalidateQueries({ queryKey: ['market', marketAddress] });
+      queryClient.invalidateQueries({ queryKey: ['marketTrades', marketAddress] });
+      // Refresh portfolio-related data
+      if (address) {
+        queryClient.invalidateQueries({ queryKey: ['userPositions', address] });
+      }
+      // Refresh lists and global stats
+      queryClient.invalidateQueries({ queryKey: ['markets'] });
+      queryClient.invalidateQueries({ queryKey: ['globalStats'] });
+    }
+  }, [isConfirmed, marketAddress, address, queryClient]);
+
   return {
     buyShares,
     hash,
@@ -209,6 +228,8 @@ export function useBuyShares(marketAddress: string | undefined) {
  */
 export function useSellShares(marketAddress: string | undefined) {
   const { data: hash, writeContract, isPending, error } = useWriteContract();
+  const { address } = useAccount();
+  const queryClient = useQueryClient();
 
   const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
     hash,
@@ -226,6 +247,21 @@ export function useSellShares(marketAddress: string | undefined) {
       args: [outcome, parseEther(shares)],
     });
   };
+
+  useEffect(() => {
+    if (isConfirmed && marketAddress) {
+      // Refresh market stats and trades for this market
+      queryClient.invalidateQueries({ queryKey: ['market', marketAddress] });
+      queryClient.invalidateQueries({ queryKey: ['marketTrades', marketAddress] });
+      // Refresh portfolio-related data
+      if (address) {
+        queryClient.invalidateQueries({ queryKey: ['userPositions', address] });
+      }
+      // Refresh lists and global stats
+      queryClient.invalidateQueries({ queryKey: ['markets'] });
+      queryClient.invalidateQueries({ queryKey: ['globalStats'] });
+    }
+  }, [isConfirmed, marketAddress, address, queryClient]);
 
   return {
     sellShares,
