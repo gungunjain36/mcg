@@ -39,9 +39,21 @@ contract Market is ERC1155 {
         address indexed user,
         bool indexed outcome,
         uint256 ethAmount,
-        uint256 shareAmount
+        uint256 shareAmount,
+        bool isBuy
     );
     event MarketResolved(bool winningOutcome, uint256 finalReportedPrice);
+    event SharesRedeemed(
+        address indexed user,
+        uint256 sharesRedeemed,
+        uint256 ethReceived
+    );
+    event LiquidityProvided(
+        address indexed provider,
+        uint256 initialYesShares,
+        uint256 initialNoShares,
+        uint256 ethAmount
+    );
 
     // --- Custom Errors ---
     error MarketAlreadyResolved();
@@ -50,6 +62,9 @@ contract Market is ERC1155 {
     error OnlyResolver();
     error InvalidSharesToRedeem();
     error InsufficientPayment();
+    error InsufficientBalance();
+    error TransferFailed();
+    error InvalidInitialLiquidity();
 
     // --- Constructor ---
     constructor(
@@ -60,6 +75,8 @@ contract Market is ERC1155 {
         uint256 _resolutionTimestamp,
         uint256 _initialLiquidity
     ) ERC1155("") payable {
+        if (_initialLiquidity == 0) revert InvalidInitialLiquidity();
+        
         creator = _creator;
         resolver = _creator; // For this MVP, the creator is the resolver
         question = _question;
@@ -78,6 +95,8 @@ contract Market is ERC1155 {
 
         _mint(_creator, YES_SHARE_ID, initialShares, "");
         _mint(_creator, NO_SHARE_ID, initialShares, "");
+
+        emit LiquidityProvided(_creator, initialShares, initialShares, _initialLiquidity);
     }
 
     // --- Trading Functions ---
@@ -106,11 +125,12 @@ contract Market is ERC1155 {
 
         _mint(msg.sender, tokenId, _sharesToBuy, "");
 
-        emit Trade(msg.sender, _outcome, cost, _sharesToBuy);
+        emit Trade(msg.sender, _outcome, cost, _sharesToBuy, true);
 
         // Refund any excess ETH sent
         if (msg.value > cost) {
-            payable(msg.sender).transfer(msg.value - cost);
+            (bool success, ) = payable(msg.sender).call{value: msg.value - cost}("");
+            if (!success) revert TransferFailed();
         }
     }
 
@@ -121,9 +141,11 @@ contract Market is ERC1155 {
     function sellShares(bool _outcome, uint256 _sharesToSell) external {
         if (status != Status.Open) revert MarketAlreadyResolved();
 
+        uint256 tokenId = _outcome ? YES_SHARE_ID : NO_SHARE_ID;
+        if (balanceOf(msg.sender, tokenId) < _sharesToSell) revert InsufficientBalance();
+
         uint256 ethAmountOut = getReturnForShares(_outcome, _sharesToSell);
         
-        uint256 tokenId = _outcome ? YES_SHARE_ID : NO_SHARE_ID;
         if (_outcome) {
             yesSharesTotal -= _sharesToSell;
         } else {
@@ -132,8 +154,10 @@ contract Market is ERC1155 {
 
         _burn(msg.sender, tokenId, _sharesToSell);
         
-        payable(msg.sender).transfer(ethAmountOut);
-        emit Trade(msg.sender, _outcome, ethAmountOut, _sharesToSell);
+        (bool success, ) = payable(msg.sender).call{value: ethAmountOut}("");
+        if (!success) revert TransferFailed();
+        
+        emit Trade(msg.sender, _outcome, ethAmountOut, _sharesToSell, false);
     }
 
     // --- Resolution & Redemption ---
@@ -149,6 +173,10 @@ contract Market is ERC1155 {
         emit MarketResolved(winningOutcome, _finalPrice);
     }
 
+    /**
+     * @dev Redeems all winning shares for ETH after market resolution.
+     * Each winning share is worth 1 ETH (scaled by SCALING_FACTOR).
+     */
     function redeemShares() external {
         if (status != Status.Resolved) revert MarketNotResolved();
 
@@ -159,8 +187,36 @@ contract Market is ERC1155 {
         
         _burn(msg.sender, tokenIdToRedeem, sharesToRedeem);
         
-        // Each winning share is worth 1 ETH in this model.
-        payable(msg.sender).transfer(sharesToRedeem);
+        // Each winning share is worth 1 ETH (unscaled)
+        uint256 ethPayout = sharesToRedeem / SCALING_FACTOR;
+        
+        (bool success, ) = payable(msg.sender).call{value: ethPayout}("");
+        if (!success) revert TransferFailed();
+        
+        emit SharesRedeemed(msg.sender, sharesToRedeem, ethPayout);
+    }
+
+    /**
+     * @dev Redeems a specific amount of winning shares.
+     * Allows partial redemption for gas optimization.
+     */
+    function redeemSharesPartial(uint256 _amount) external {
+        if (status != Status.Resolved) revert MarketNotResolved();
+
+        uint256 tokenIdToRedeem = winningOutcome ? YES_SHARE_ID : NO_SHARE_ID;
+        uint256 userBalance = balanceOf(msg.sender, tokenIdToRedeem);
+
+        if (_amount == 0 || _amount > userBalance) revert InvalidSharesToRedeem();
+        
+        _burn(msg.sender, tokenIdToRedeem, _amount);
+        
+        // Each winning share is worth 1 ETH (unscaled)
+        uint256 ethPayout = _amount / SCALING_FACTOR;
+        
+        (bool success, ) = payable(msg.sender).call{value: ethPayout}("");
+        if (!success) revert TransferFailed();
+        
+        emit SharesRedeemed(msg.sender, _amount, ethPayout);
     }
 
     // --- View Functions for QMM ---
@@ -197,6 +253,102 @@ contract Market is ERC1155 {
         return currentShares / SCALING_FACTOR;
     }
 
+    // --- Portfolio View Functions ---
+
+    /**
+     * @dev Returns the current value of a user's position in ETH.
+     * @param _user The address of the user
+     * @return yesValue ETH value of YES shares
+     * @return noValue ETH value of NO shares
+     * @return totalValue Total ETH value of all shares
+     */
+    function getPositionValue(address _user) external view returns (
+        uint256 yesValue,
+        uint256 noValue,
+        uint256 totalValue
+    ) {
+        uint256 yesBalance = balanceOf(_user, YES_SHARE_ID);
+        uint256 noBalance = balanceOf(_user, NO_SHARE_ID);
+
+        if (status == Status.Open) {
+            // During trading, shares can be sold back at current market price
+            yesValue = yesBalance > 0 ? getReturnForShares(true, yesBalance) : 0;
+            noValue = noBalance > 0 ? getReturnForShares(false, noBalance) : 0;
+        } else {
+            // After resolution, only winning shares have value (1 ETH per share)
+            if (winningOutcome) {
+                yesValue = yesBalance / SCALING_FACTOR;
+                noValue = 0;
+            } else {
+                yesValue = 0;
+                noValue = noBalance / SCALING_FACTOR;
+            }
+        }
+
+        totalValue = yesValue + noValue;
+    }
+
+    /**
+     * @dev Returns detailed market information.
+     */
+    function getMarketInfo() external view returns (
+        string memory _question,
+        string memory _collectionSlug,
+        uint256 _targetPrice,
+        uint256 _resolutionTimestamp,
+        Status _status,
+        bool _winningOutcome,
+        uint256 _yesSharesTotal,
+        uint256 _noSharesTotal,
+        uint256 _yesPrice,
+        uint256 _noPrice
+    ) {
+        return (
+            question,
+            collectionSlug,
+            targetPrice,
+            resolutionTimestamp,
+            status,
+            winningOutcome,
+            yesSharesTotal,
+            noSharesTotal,
+            getSpotPrice(true),
+            getSpotPrice(false)
+        );
+    }
+
+    /**
+     * @dev Returns user's share balances.
+     */
+    function getUserBalances(address _user) external view returns (
+        uint256 yesShares,
+        uint256 noShares
+    ) {
+        return (
+            balanceOf(_user, YES_SHARE_ID),
+            balanceOf(_user, NO_SHARE_ID)
+        );
+    }
+
+    /**
+     * @dev Checks if a user can redeem shares (has winning shares after resolution).
+     */
+    function canRedeem(address _user) external view returns (bool) {
+        if (status != Status.Resolved) return false;
+        uint256 tokenId = winningOutcome ? YES_SHARE_ID : NO_SHARE_ID;
+        return balanceOf(_user, tokenId) > 0;
+    }
+
+    /**
+     * @dev Returns the amount of ETH a user can redeem.
+     */
+    function getRedeemableAmount(address _user) external view returns (uint256) {
+        if (status != Status.Resolved) return 0;
+        uint256 tokenId = winningOutcome ? YES_SHARE_ID : NO_SHARE_ID;
+        uint256 shares = balanceOf(_user, tokenId);
+        return shares / SCALING_FACTOR;
+    }
+
     // --- Utility Functions ---
 
     /**
@@ -214,5 +366,10 @@ contract Market is ERC1155 {
             z = 1;
         }
     }
+
+    /**
+     * @dev Allows contract to receive ETH for market operations.
+     */
+    receive() external payable {}
 }
 
