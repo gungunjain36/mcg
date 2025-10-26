@@ -1,0 +1,27 @@
+{
+  "name": "@mcg-fun/asi-agents",
+  "version": "1.0.0",
+  "description": "ASI Alliance autonomous agents for MCG.FUN NFT prediction markets",
+  "scripts": {
+    "install": "pip install -r requirements.txt",
+    "start:all": "python run_all_agents.py",
+    "start:analyst": "python agents/market_analyst.py",
+    "start:resolver": "python agents/resolver_agent.py",
+    "start:portfolio": "python agents/portfolio_advisor.py",
+    "start:oracle": "python agents/oracle_agent.py",
+    "test": "pytest tests/ -v",
+    "deploy": "bash scripts/deploy_to_agentverse.sh"
+  },
+  "keywords": [
+    "asi-alliance",
+    "fetch-ai",
+    "uagents",
+    "metta",
+    "prediction-markets",
+    "nft",
+    "agentverse"
+  ],
+  "author": "MCG.FUN Team",
+  "license": "MIT"
+}
+

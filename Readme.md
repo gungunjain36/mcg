@@ -4,12 +4,52 @@ A decentralized prediction market platform for trading on NFT floor price outcom
 
 ## 🎯 Overview
 
+🤖 **Now powered by ASI Alliance autonomous AI agents!**
+
 mcg.fun allows users to:
 - Create prediction markets for NFT floor prices
 - Trade YES/NO outcome shares using LMSR (Logarithmic Market Scoring Rule)
 - Track real-time NFT floor prices from OpenSea
-- Resolve markets based on actual floor prices
+- **Get AI-powered market analysis and predictions** ✨
+- **Receive personalized portfolio advice** 💼
+- **Access automated market resolution** ⚖️
 - Claim winnings from correct predictions
+
+## 🤖 ASI Alliance Integration
+
+mcg.fun is enhanced with **4 autonomous AI agents** powered by the ASI Alliance:
+
+### 📊 Market Analyst Agent
+AI-powered analysis with real-time floor prices and MeTTa-powered recommendations
+- Fetches live data from OpenSea
+- Analyzes on-chain sentiment
+- Predicts price movements
+- Provides buy/sell/hold recommendations
+
+### ⚖️ Resolver Agent
+Automated trustless market resolution
+- Monitors resolution deadlines
+- Fetches verified prices
+- Executes on-chain settlement
+- Runs autonomously every 10 minutes
+
+### 💼 Portfolio Advisor Agent
+Personalized trading and portfolio management
+- Analyzes all your positions
+- Calculates P&L and risk
+- Generates custom recommendations
+- Optimizes diversification
+
+### 🔮 Oracle Agent
+Multi-source price verification
+- Aggregates from multiple sources
+- Median-based outlier resistance
+- Confidence scoring
+- Real-time monitoring
+
+**🎯 All agents run on Agentverse for FREE - no backend needed!**
+
+See [packages/asi-agents/README.md](packages/asi-agents/README.md) for complete documentation.
 
 ## 🏗️ Architecture
 
@@ -20,7 +60,8 @@ mcg-fun/
 ├── packages/
 │   ├── blockend/      # Smart contracts (Hardhat)
 │   ├── indexer/       # Envio HyperIndex for blockchain data
-│   └── frontend/      # React + TypeScript UI
+│   ├── frontend/      # React + TypeScript UI
+│   └── asi-agents/    # ASI Alliance autonomous agents
 ```
 
 ### Tech Stack
@@ -28,6 +69,7 @@ mcg-fun/
 - **Smart Contracts**: Solidity, Hardhat, OpenZeppelin
 - **Indexer**: Envio HyperIndex, GraphQL
 - **Frontend**: React 18, TypeScript, Vite, Tailwind CSS, Wagmi v2, RainbowKit
+- **AI Agents**: Fetch.ai uAgents, SingularityNET MeTTa, Agentverse, ASI:One
 - **External APIs**: OpenSea API for NFT floor prices
 
 ## 🚀 Quick Start
@@ -95,6 +137,27 @@ pnpm dev
 
 Visit `http://localhost:5173` to use the app!
 
+### 5. Setup ASI Agents (Optional)
+
+```bash
+cd packages/asi-agents
+
+# Install Python dependencies
+pip install -r requirements.txt
+
+# Configure environment
+cp .env.example .env
+nano .env  # Add your API keys and seeds
+
+# Run all agents locally
+python run_all_agents.py
+
+# Or deploy to Agentverse (FREE hosting!)
+bash scripts/deploy_to_agentverse.sh
+```
+
+See [packages/asi-agents/QUICKSTART.md](packages/asi-agents/QUICKSTART.md) for detailed instructions.
+
 ## 📦 Package Details
 
 ### packages/blockend - Smart Contracts
@@ -144,6 +207,23 @@ Modern web interface for the prediction markets:
 - Market discovery and filtering
 
 See [packages/frontend/README.md](packages/frontend/README.md) for details.
+
+### packages/asi-agents - AI Agents
+
+Autonomous AI agents powered by ASI Alliance:
+
+- **Market Analyst** - AI-powered market analysis with MeTTa reasoning
+- **Resolver** - Automated market resolution
+- **Portfolio Advisor** - Personalized trading advice
+- **Oracle** - Multi-source price verification
+
+**Powered by:**
+- Fetch.ai uAgents framework
+- SingularityNET MeTTa knowledge graphs
+- Agentverse (FREE hosting)
+- ASI:One chat protocol
+
+See [packages/asi-agents/README.md](packages/asi-agents/README.md) for details.
 
 ## 🎮 How It Works
 
@@ -195,6 +275,16 @@ See [packages/frontend/README.md](packages/frontend/README.md) for details.
 - ✅ Portfolio tracking
 - ✅ Responsive design
 - ✅ Real-time updates
+- ✅ AI chat interface (ASI:One)
+
+### AI Agent Features
+- ✅ Real-time market analysis
+- ✅ AI-powered predictions
+- ✅ Automated resolution
+- ✅ Portfolio optimization
+- ✅ Multi-source price verification
+- ✅ Explainable recommendations (MeTTa)
+- ✅ Natural language chat interface
 
 ## 🛠️ Development
 
@@ -361,6 +451,9 @@ ISC License
 
 ## 🙏 Acknowledgments
 
+- **ASI Alliance** for autonomous AI agent technology
+- **Fetch.ai** for uAgents framework and Agentverse
+- **SingularityNET** for MeTTa knowledge graphs
 - OpenZeppelin for secure contract libraries
 - Envio for the HyperIndex indexer
 - RainbowKit for wallet connection
@@ -369,6 +462,17 @@ ISC License
 
 ## 📚 Resources
 
+### Project Documentation
+- [ASI Agents README](packages/asi-agents/README.md)
+- [ASI Quick Start](packages/asi-agents/QUICKSTART.md)
+- [ASI Integration Summary](packages/asi-agents/ASI_INTEGRATION_SUMMARY.md)
+- [Hackathon Submission Guide](packages/asi-agents/HACKATHON_SUBMISSION.md)
+
+### External Documentation
+- [Fetch.ai Innovation Lab](https://innovationlab.fetch.ai/resources/docs/intro)
+- [MeTTa Language](https://metta-lang.dev/)
+- [Agentverse](https://agentverse.ai/)
+- [ASI:One](https://asi1.ai/)
 - [Envio Documentation](https://docs.envio.dev/)
 - [RainbowKit Documentation](https://www.rainbowkit.com/)
 - [Wagmi Documentation](https://wagmi.sh/)
@@ -383,6 +487,22 @@ ISC License
 
 ## 🗺️ Roadmap
 
+### Completed ✅
+- [x] Core prediction market contracts
+- [x] Real-time blockchain indexer
+- [x] Modern React frontend
+- [x] AI-powered market analysis (ASI Alliance)
+- [x] Automated market resolution (ASI agents)
+- [x] Portfolio management AI
+- [x] Multi-source price oracles
+
+### In Progress 🚧
+- [ ] Deploy to mainnet
+- [ ] More NFT marketplace integrations (Blur, LooksRare)
+- [ ] Advanced MeTTa reasoning rules
+- [ ] Social sentiment analysis agent
+
+### Planned 📋
 - [ ] Support for more chains (Polygon, Arbitrum, etc.)
 - [ ] Additional market types (binary outcomes beyond price)
 - [ ] Liquidity provider rewards
@@ -390,7 +510,7 @@ ISC License
 - [ ] Mobile app
 - [ ] Social features (comments, follows)
 - [ ] Advanced charting
-- [ ] Automated market resolution (Chainlink oracles)
+- [ ] Cross-chain agent coordination
 
 ## 💬 Support
 
