@@ -1,9 +1,7 @@
 <p align="center">
-  <img src="https://placehold.co/160x160?text=mcg" alt="mcg logo" width="160" />
+  <img src="https://github.com/user-attachments/assets/6be08ea1-3491-4034-870e-9307490c5020" alt="mcg logo" width="160" />
 </p>
 <h2 align="center">mcg.fun</h2>
-
-## 📝 Description
 
 mcg.fun is a full‑stack, decentralized prediction market where anyone can create and trade markets on NFT collection floor price outcomes. Under the hood, the protocol mints ERC‑1155 YES/NO shares, prices trades via a battle‑tested LMSR automated market maker, and enforces a time‑locked resolution flow. A real‑time indexer powers rich analytics, while a modern React application provides a smooth, wallet‑first experience.
 
@@ -14,8 +12,14 @@ Autonomous AI agents enhance the product with always‑on market analysis, autom
 - App (preview): https://mcgdotfun.vercel.app/
 
 ## 📸 Screenshots
+![WhatsApp Image 2025-10-26 at 8 48 15 PM](https://github.com/user-attachments/assets/9b1000a6-5aa0-427c-b72b-929f0abc43fc)
+![WhatsApp Image 2025-10-26 at 8 48 16 PM](https://github.com/user-attachments/assets/8fa9ee1c-51c2-4033-99a0-fc102f5037dc)
+![WhatsApp Image 2025-10-26 at 8 48 16 PM (1)](https://github.com/user-attachments/assets/94cc1752-6bff-4e56-bce2-ac9fe408bf6f)
+![WhatsApp Image 2025-10-26 at 8 48 38 PM](https://github.com/user-attachments/assets/751af4d2-ed9c-4f52-99dd-f58c605fac96)
+![WhatsApp Image 2025-10-26 at 8 48 39 PM](https://github.com/user-attachments/assets/76fde155-1bcc-46ae-abdb-190d453e75c0)
+![WhatsApp Image 2025-10-26 at 8 48 39 PM (1)](https://github.com/user-attachments/assets/9c7cfe6d-14b7-4c71-8a9f-c7c15f17fae2)
 
-<!-- Intentionally left blank (add screenshots as needed) -->
+
 
 ## 🧭 Architecture Diagram
 
