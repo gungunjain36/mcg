@@ -10,6 +10,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Search, TrendingUp, Plus } from 'lucide-react';
 import StatsCards from '@/components/dashboard/StatsCards';
 import { graph } from '@/lib/graphql';
+import { useBatchMarketTotals } from '@/hooks/useBatchMarketTotals';
 
 const Home = () => {
   const [filter, setFilter] = useState<'all' | 'active' | 'resolved'>('active');
@@ -27,9 +28,24 @@ const Home = () => {
   });
 
   const marketsFromIndexer = marketsData?.Market ?? [];
-  const mappedMarkets = marketsFromIndexer.map((m) => {
-    const yesShares = Number(m.yesSharesTotal) / 1e18;
-    const noShares = Number(m.noSharesTotal) / 1e18;
+  
+  // Extract market addresses for batch fetching
+  const marketAddresses = marketsFromIndexer.map(m => m.marketAddress);
+  
+  // Batch fetch real-time totals for all markets
+  // This provides real-time price updates when trades occur, updating every 30 seconds
+  const batchTotals = useBatchMarketTotals(marketAddresses);
+  
+  // Create a component that uses real-time data for each market
+  const MarketCardWithRealtimeData = ({ market }: { market: any }) => {
+    // Get real-time totals for this specific market
+    const onchainTotals = batchTotals[market.marketAddress];
+    
+    // Use on-chain data if available, otherwise fallback to indexer data
+    const yesSharesIndexer = Number(market.yesSharesTotal) / 1e18;
+    const noSharesIndexer = Number(market.noSharesTotal) / 1e18;
+    const yesShares = onchainTotals?.yes ?? yesSharesIndexer;
+    const noShares = onchainTotals?.no ?? noSharesIndexer;
     const totalShares = yesShares + noShares;
     
     // Calculate actual ETH price for YES and NO shares
@@ -37,31 +53,44 @@ const Home = () => {
     const yesPrice = totalShares > 0 ? yesShares / totalShares : 0.5;
     const noPrice = totalShares > 0 ? noShares / totalShares : 0.5;
     
-    return {
-      id: m.marketAddress,
-      question: m.question,
-      collectionSlug: m.collectionSlug,
-      targetPrice: Number(m.targetPrice) / 1e18,
+    const marketWithRealtimePrices = {
+      id: market.marketAddress,
+      question: market.question,
+      collectionSlug: market.collectionSlug,
+      targetPrice: Number(market.targetPrice) / 1e18,
       currentFloorPrice: 0,
-      resolutionDate: new Date(Number(m.resolutionTimestamp) * 1000).toLocaleDateString(),
-      yesPrice, // ETH price per share
-      noPrice, // ETH price per share
-      totalVolume: Number(m.totalVolume) / 1e18,
+      resolutionDate: new Date(Number(market.resolutionTimestamp) * 1000).toLocaleDateString(),
+      yesPrice, // ETH price per share - REAL-TIME
+      noPrice, // ETH price per share - REAL-TIME
+      totalVolume: Number(market.totalVolume) / 1e18,
       totalLiquidity: totalShares,
-      creatorAddress: m.creator,
-      resolved: m.status === 'Resolved',
-      outcome: m.winningOutcome,
+      creatorAddress: market.creator,
+      resolved: market.status === 'Resolved',
+      outcome: market.winningOutcome,
     };
-  });
+    
+    return <MarketCardWithCollection market={marketWithRealtimePrices} />;
+  };
 
-  // Show ONLY real data from indexer - no mock data fallback
-  const dataForUI = mappedMarkets;
+  const mappedMarkets = marketsFromIndexer.map((m) => ({
+    marketAddress: m.marketAddress,
+    question: m.question,
+    collectionSlug: m.collectionSlug,
+    targetPrice: m.targetPrice,
+    resolutionTimestamp: m.resolutionTimestamp,
+    yesSharesTotal: m.yesSharesTotal,
+    noSharesTotal: m.noSharesTotal,
+    totalVolume: m.totalVolume,
+    creator: m.creator,
+    status: m.status,
+    winningOutcome: m.winningOutcome,
+  }));
 
-  const filteredMarkets = dataForUI.filter((market) => {
+  const filteredMarkets = mappedMarkets.filter((market) => {
     const matchesFilter =
       filter === 'all' ||
-      (filter === 'active' && !market.resolved) ||
-      (filter === 'resolved' && market.resolved);
+      (filter === 'active' && market.status !== 'Resolved') ||
+      (filter === 'resolved' && market.status === 'Resolved');
     
     const matchesSearch = market.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
       market.collectionSlug.toLowerCase().includes(searchQuery.toLowerCase());
@@ -121,7 +150,7 @@ const Home = () => {
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredMarkets.map((market) => (
-                  <MarketCardWithCollection key={market.id} market={market} />
+                  <MarketCardWithRealtimeData key={market.marketAddress} market={market} />
                 ))}
               </div>
               
