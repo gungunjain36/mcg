@@ -68,7 +68,7 @@ const TradeHistory = ({ trades }: TradeHistoryProps) => {
                   </Badge>
                 </div>
                 <div className="text-xs text-muted-foreground">
-                  {trade.type} • {trade.amount.toFixed(2)} ETH @ {(trade.price * 100).toFixed(0)}¢
+                  {trade.type} • {trade.amount.toFixed(4)} ETH @ {trade.price.toFixed(3)} ETH/share
                 </div>
               </div>
             </div>

@@ -19,8 +19,8 @@ const MarketStats = ({ market }: MarketStatsProps) => {
       </Card>
       
       <Card className="border-border p-4">
-        <div className="text-xs text-muted-foreground mb-1">Liquidity</div>
-        <div className="text-xl font-semibold">{market.totalLiquidity.toFixed(0)} ETH</div>
+        <div className="text-xs text-muted-foreground mb-1">Total Shares</div>
+        <div className="text-xl font-semibold">{market.totalLiquidity.toFixed(0)}</div>
       </Card>
       
       <Card className="border-border p-4">

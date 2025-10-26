@@ -103,7 +103,7 @@ const Home = () => {
               totalMarkets={statsData?.globalStats?.totalMarkets}
               totalTrades={statsData?.globalStats?.totalTrades}
               totalUsers={statsData?.globalStats?.totalUsers}
-              totalVolumeEth={statsData?.globalStats ? String(statsData.globalStats.totalVolume) : '0'}
+              totalVolumeEth={statsData?.globalStats ? (Number(statsData.globalStats.totalVolume) / 1e18).toFixed(2) : '0'}
               loading={statsLoading}
             />
           </div>

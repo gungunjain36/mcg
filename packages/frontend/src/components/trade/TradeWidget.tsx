@@ -123,7 +123,7 @@ const TradeWidget = ({ market, marketAddress }: TradeWidgetProps) => {
         <div className="rounded border border-border bg-muted/30 p-3 space-y-2 text-sm">
           <div className="flex justify-between">
             <span className="text-muted-foreground">Spot Price</span>
-            <span>{(parseFloat(currentPrice) * 100).toFixed(1)}¢</span>
+            <span>{parseFloat(currentPrice).toFixed(3)} ETH</span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">
