@@ -1,362 +1,172 @@
-# mcg.fun - NFT Prediction Markets
+<p align="center">
+  <img src="https://placehold.co/160x160?text=mcg" alt="mcg logo" width="160" />
+</p>
+<h2 align="center">mcg.fun</h2>
 
-A decentralized prediction market platform for trading on NFT floor price outcomes. Built with smart contracts, a real-time indexer, and a modern React frontend.
+## 📝 Description
 
-## 🎯 Overview
+mcg.fun is a full‑stack, decentralized prediction market where anyone can create and trade markets on NFT collection floor price outcomes. Under the hood, the protocol mints ERC‑1155 YES/NO shares, prices trades via a battle‑tested LMSR automated market maker, and enforces a time‑locked resolution flow. A real‑time indexer powers rich analytics, while a modern React application provides a smooth, wallet‑first experience.
 
-🤖 **Now powered by ASI Alliance autonomous AI agents!**
+Autonomous AI agents enhance the product with always‑on market analysis, automated resolution, and personalized portfolio guidance—without requiring a bespoke backend. Together, these components deliver a practical and opinionated blueprint for price‑based prediction markets on NFTs.
 
-mcg.fun allows users to:
-- Create prediction markets for NFT floor prices
-- Trade YES/NO outcome shares using LMSR (Logarithmic Market Scoring Rule)
-- Track real-time NFT floor prices from OpenSea
-- **Get AI-powered market analysis and predictions** ✨
-- **Receive personalized portfolio advice** 💼
-- **Access automated market resolution** ⚖️
-- Claim winnings from correct predictions
+## 🔗 Links
 
-## 🤖 ASI Alliance Integration
+- App (preview): https://mcgdotfun.vercel.app/
 
-mcg.fun is enhanced with **4 autonomous AI agents** powered by the ASI Alliance:
+## 📸 Screenshots
 
-### 📊 Market Analyst Agent
-AI-powered analysis with real-time floor prices and MeTTa-powered recommendations
-- Fetches live data from OpenSea
-- Analyzes on-chain sentiment
-- Predicts price movements
-- Provides buy/sell/hold recommendations
+<!-- Intentionally left blank (add screenshots as needed) -->
 
-### ⚖️ Resolver Agent
-Automated trustless market resolution
-- Monitors resolution deadlines
-- Fetches verified prices
-- Executes on-chain settlement
-- Runs autonomously every 10 minutes
+## 🧭 Architecture Diagram
 
-### 💼 Portfolio Advisor Agent
-Personalized trading and portfolio management
-- Analyzes all your positions
-- Calculates P&L and risk
-- Generates custom recommendations
-- Optimizes diversification
-
-### 🔮 Oracle Agent
-Multi-source price verification
-- Aggregates from multiple sources
-- Median-based outlier resistance
-- Confidence scoring
-- Real-time monitoring
-
-**🎯 All agents run on Agentverse for FREE - no backend needed!**
-
-See [packages/asi-agents/README.md](packages/asi-agents/README.md) for complete documentation.
-
-## 🏗️ Architecture
-
-The project consists of three main packages:
-
-```
-mcg-fun/
-├── packages/
-│   ├── blockend/      # Smart contracts (Hardhat)
-│   ├── indexer/       # Envio HyperIndex for blockchain data
-│   ├── frontend/      # React + TypeScript UI
-│   └── asi-agents/    # ASI Alliance autonomous agents
-```
-
-### Tech Stack
-
-- **Smart Contracts**: Solidity, Hardhat, OpenZeppelin
-- **Indexer**: Envio HyperIndex, GraphQL
-- **Frontend**: React 18, TypeScript, Vite, Tailwind CSS, Wagmi v2, RainbowKit
-- **AI Agents**: Fetch.ai uAgents, SingularityNET MeTTa, Agentverse, ASI:One
-- **External APIs**: OpenSea API for NFT floor prices
-
-## 🚀 Quick Start
-
-### Prerequisites
-
-- Node.js v20 (required)
-- pnpm (package manager)
-- Docker (for indexer)
-- Ethereum wallet with testnet ETH
-
-### 1. Install Dependencies
-
-```bash
-# Install all dependencies
-pnpm install
-```
-
-### 2. Deploy Smart Contracts
-
-```bash
-cd packages/blockend
-
-# Start local Hardhat node
-npx hardhat node
-
-# In another terminal, deploy contracts
-npx hardhat run scripts/deploy.ts --network localhost
-
-# Note the deployed MarketFactory address
-```
-
-### 3. Configure Indexer
-
-```bash
-cd packages/indexer
-
-# Update config.yaml with deployed contract address
-# Edit config.yaml and add the MarketFactory address
-
-# Generate indexer code
-pnpm codegen
-
-# Start indexing
-TUI_OFF=true pnpm dev
-```
-
-### 4. Configure Frontend
-
-```bash
-cd packages/frontend
-
-# Create .env.local file
-cat > .env.local << EOF
-VITE_WALLETCONNECT_PROJECT_ID=your_project_id_here
-VITE_OPENSEA_API_KEY=your_api_key_here
-VITE_GRAPHQL_ENDPOINT=http://localhost:8080/v1/graphql
-EOF
-
-# Update src/lib/wagmi.ts with deployed MarketFactory address
-
-# Start dev server
-pnpm dev
-```
-
-Visit `http://localhost:5173` to use the app!
-
-### 5. Setup ASI Agents (Optional)
-
-```bash
-cd packages/asi-agents
-
-# Install Python dependencies
-pip install -r requirements.txt
-
-# Configure environment
-cp .env.example .env
-nano .env  # Add your API keys and seeds
-
-# Run all agents locally
-python run_all_agents.py
-
-# Or deploy to Agentverse (FREE hosting!)
-bash scripts/deploy_to_agentverse.sh
-```
-
-See [packages/asi-agents/QUICKSTART.md](packages/asi-agents/QUICKSTART.md) for detailed instructions.
-
-## 📦 Package Details
-
-### packages/blockend - Smart Contracts
-
-Ethereum smart contracts for the prediction market:
-
-- **MarketFactory.sol** - Factory for creating new markets
-- **Market.sol** - Individual market with ERC-1155 shares and LMSR pricing
-
-**Features:**
-- LMSR automated market maker
-- ERC-1155 for fungible YES/NO shares
-- Time-locked resolution
-- Permissioned resolver
-- Share redemption after resolution
-
-See [packages/blockend/README.md](packages/blockend/README.md) for details.
-
-### packages/indexer - Envio HyperIndex
-
-Real-time blockchain indexer using Envio:
-
-- Indexes MarketCreated events
-- Tracks all trades
-- Calculates user positions
-- Aggregates global statistics
-- Exposes GraphQL API
-
-**Schema Entities:**
-- Market
-- User
-- Position
-- Trade
-- GlobalStats
-
-See [packages/indexer/README.md](packages/indexer/README.md) for details.
-
-### packages/frontend - React App
-
-Modern web interface for the prediction markets:
-
-- Wallet connection (RainbowKit)
-- Market creation with OpenSea search
-- Buy/sell shares with real-time pricing
-- Portfolio tracking
-- Real-time NFT floor prices
-- Market discovery and filtering
-
-See [packages/frontend/README.md](packages/frontend/README.md) for details.
-
-### packages/asi-agents - AI Agents
-
-Autonomous AI agents powered by ASI Alliance:
-
-- **Market Analyst** - AI-powered market analysis with MeTTa reasoning
-- **Resolver** - Automated market resolution
-- **Portfolio Advisor** - Personalized trading advice
-- **Oracle** - Multi-source price verification
-
-**Powered by:**
-- Fetch.ai uAgents framework
-- SingularityNET MeTTa knowledge graphs
-- Agentverse (FREE hosting)
-- ASI:One chat protocol
-
-See [packages/asi-agents/README.md](packages/asi-agents/README.md) for details.
-
-## 🎮 How It Works
-
-### Creating a Market
-
-1. User selects an NFT collection (via OpenSea search)
-2. Sets a target floor price (e.g., "Will BAYC floor be > 30 ETH?")
-3. Sets resolution date
-4. Provides initial liquidity in ETH
-5. Market is created on-chain with YES and NO shares
-
-### Trading Shares
-
-1. Users buy YES shares if they think the outcome will be YES
-2. Or buy NO shares if they think the outcome will be NO
-3. Prices adjust dynamically based on the ratio of shares using LMSR
-4. Users can sell shares back to the market at any time
-5. Each share represents a claim on 1 ETH if that outcome wins
-
-### Market Resolution
-
-1. After the resolution date, the resolver checks the NFT floor price
-2. Resolver calls `resolveMarket()` with the actual floor price
-3. Market determines if floor price met the target (YES) or not (NO)
-4. Winning share holders can redeem their shares for ETH
-5. Each winning share = 1 ETH payout
+<!-- Intentionally left blank (add diagram as needed) -->
 
 ## 🔑 Key Features
 
-### Smart Contract Features
-- ✅ LMSR automated market maker
-- ✅ ERC-1155 fungible shares
-- ✅ Time-locked resolution
-- ✅ Slippage protection
-- ✅ Efficient liquidity provision
+- Smart contracts
+  - Deterministic LMSR AMM for continuous pricing and instant liquidity
+  - ERC‑1155 YES/NO shares for gas‑efficient, fungible positions
+  - Time‑locked, trust‑minimized resolution and ETH redemption for winners
 
-### Indexer Features
-- ✅ Real-time event indexing
-- ✅ GraphQL API
-- ✅ Position tracking
-- ✅ Trade history
-- ✅ Global statistics
+- Indexer
+  - Real‑time event ingestion and entity updates using Envio HyperIndex
+  - Derived views for user positions, trade history, and global stats
+  - GraphQL API for low‑latency, strongly‑typed queries from the frontend
 
-### Frontend Features
-- ✅ Wallet connection (any EVM wallet)
-- ✅ Market creation UI
-- ✅ Trading interface
-- ✅ OpenSea integration
-- ✅ Portfolio tracking
-- ✅ Responsive design
-- ✅ Real-time updates
-- ✅ AI chat interface (ASI:One)
+- Frontend
+  - Wallet connection with RainbowKit and type‑safe EVM calls via Wagmi/Viem
+  - Market creation with OpenSea search and floor price context
+  - Intuitive trading UI with slippage protection and instant feedback
+  - Portfolio insights, responsive layout, and polished UI via shadcn/ui + Tailwind
 
-### AI Agent Features
-- ✅ Real-time market analysis
-- ✅ AI-powered predictions
-- ✅ Automated resolution
-- ✅ Portfolio optimization
-- ✅ Multi-source price verification
-- ✅ Explainable recommendations (MeTTa)
-- ✅ Natural language chat interface
+- AI agents
+  - Market analysis with knowledge‑driven MeTTa reasoning
+  - Automated, scheduled market resolution with on‑chain settlement
+  - Personalized portfolio advice and risk‑aware recommendations
+  - Oracle aggregation with outlier resistance and confidence scoring
 
-## 🛠️ Development
+## 🧱 Application Architecture
 
-### Smart Contract Development
+Monorepo with four primary packages under `packages/`:
+
+- Smart Contracts — `packages/blockend`
+  - Built with Hardhat + Solidity and OpenZeppelin. Chosen for familiar DX, rich plugin ecosystem, and fast local node.
+  - Why: Deterministic LMSR pricing, ERC-1155 share fungibility, explicit time-locked resolution.
+
+- Indexer — `packages/indexer`
+  - Runs Envio HyperIndex with TypeScript handlers and GraphQL output. Chosen for low-latency indexing and ergonomic dev loop.
+  - Why: Live market data, user positions, trade history, and global analytics exposed via GraphQL.
+
+- Frontend — `packages/frontend`
+  - React + TypeScript + Vite with Tailwind and shadcn/ui; wallet via RainbowKit, web3 via Wagmi/Viem.
+  - Why: Modern UI, fast HMR, strong type safety, first-class wallet UX.
+
+- ASI Agents — `packages/asi-agents`
+  - uAgents (Fetch.ai), MeTTa (SingularityNET), Agentverse hosting, ASI:One chat protocol.
+  - Why: Autonomous analysis, trustless resolution flows, and advisory features without a custom backend.
+
+Referenced tools and where they live:
+
+- Envio HyperIndex → `packages/indexer`
+- Hardhat + Solidity → `packages/blockend`
+- React, Wagmi, RainbowKit, shadcn/ui → `packages/frontend`
+- uAgents, Agentverse, MeTTa, ASI:One → `packages/asi-agents`
+
+Sponsors, services, and libs we use (and why):
+
+- ASI Alliance (agents track) — autonomous integrations and hosting options
+- Fetch.ai (uAgents, Agentverse) — lightweight agent framework + free agent hosting
+- SingularityNET (MeTTa) — explainable knowledge representation and reasoning
+- Envio — real-time, ergonomic EVM indexing with GraphQL
+- RainbowKit/Wagmi/Viem — wallet UX and type-safe EVM interactions
+- OpenSea API — reliable NFT collection floor prices
+- shadcn/ui + Tailwind — modern, accessible, composable UI components
+
+## 🧰 Development
+
+### Smart contracts
 
 ```bash
 cd packages/blockend
-
-# Compile contracts
 npx hardhat compile
-
-# Run tests
 npx hardhat test
-
-# Deploy to network
 npx hardhat run scripts/deploy.ts --network <network>
 ```
 
-### Indexer Development
+### Indexer
 
 ```bash
 cd packages/indexer
-
-# After modifying schema.graphql or config.yaml
 pnpm codegen
-
-# Check TypeScript compilation
 pnpm tsc --noEmit
-
-# Start development mode
 TUI_OFF=true pnpm dev
 ```
 
-### Frontend Development
+### Frontend
 
 ```bash
 cd packages/frontend
-
-# Start dev server
 pnpm dev
-
-# Build for production
 pnpm build
-
-# Preview production build
 pnpm preview
-
-# Lint code
 pnpm lint
 ```
 
-## 🧪 Testing
+## 🚀 Installation
 
-### Smart Contract Tests
+### Prerequisites
+
+- Node.js 20+
+- pnpm
+- Docker (for indexer)
+- Ethereum wallet (for local/testnet)
+- Python 3.10+ (only if using agents)
+
+### 1) Install deps
+
+```bash
+pnpm install
+```
+
+### 2) Contracts (local)
 
 ```bash
 cd packages/blockend
-npx hardhat test
+npx hardhat node
+# new terminal
+npx hardhat run scripts/deploy.ts --network localhost
 ```
 
-### Indexer Tests
+### 3) Indexer
 
 ```bash
 cd packages/indexer
-pnpm test
+# update config.yaml with MarketFactory address
+pnpm codegen
+TUI_OFF=true pnpm dev
 ```
 
-### Frontend Tests
+### 4) Frontend
 
 ```bash
 cd packages/frontend
-pnpm test
+cat > .env.local << EOF
+VITE_WALLETCONNECT_PROJECT_ID=your_project_id
+VITE_OPENSEA_API_KEY=your_api_key
+VITE_GRAPHQL_ENDPOINT=http://localhost:8080/v1/graphql
+EOF
+pnpm dev
+```
+
+### 5) Agents (optional)
+
+```bash
+cd packages/asi-agents
+pip install -r requirements.txt
+cp .env.example .env
+python run_all_agents.py
+# or deploy:
+bash scripts/deploy_to_agentverse.sh
 ```
 
 ## 📝 Environment Variables
@@ -369,7 +179,7 @@ VITE_OPENSEA_API_KEY=              # Optional from docs.opensea.io
 VITE_GRAPHQL_ENDPOINT=             # Indexer GraphQL endpoint
 ```
 
-### Indexer (config.yaml)
+### Indexer (config.yaml snippet)
 
 ```yaml
 networks:
@@ -381,145 +191,115 @@ networks:
 
 ## 🚢 Deployment
 
-### 1. Deploy Smart Contracts
+### 1) Deploy smart contracts
 
 ```bash
 cd packages/blockend
 npx hardhat run scripts/deploy.ts --network sepolia
 ```
 
-### 2. Configure Indexer
+### 2) Configure and run indexer
 
-Update `packages/indexer/config.yaml` with:
-- Network ID
-- Contract addresses
-- RPC URL
+Update `packages/indexer/config.yaml` with the network, contract address, and RPC URL, then:
 
 ```bash
 cd packages/indexer
 pnpm codegen
-# Deploy to cloud or run locally
+TUI_OFF=true pnpm dev
 ```
 
-### 3. Deploy Frontend
+### 3) Deploy frontend
 
 ```bash
 cd packages/frontend
 pnpm build
+# Deploy dist/ to your host (e.g. Vercel, Netlify, S3+CloudFront)
+```
 
-# Deploy dist/ folder to:
-# - Vercel
-# - Netlify
-# - AWS S3 + CloudFront
-# - Any static hosting
+## 🧪 Testing
+
+```bash
+# contracts
+cd packages/blockend && npx hardhat test
+
+# indexer
+cd packages/indexer && pnpm test
+
+# frontend
+cd packages/frontend && pnpm lint
 ```
 
 ## 🔐 Security Considerations
 
-- Smart contracts use OpenZeppelin libraries
-- Time-locked resolution prevents premature resolution
-- Slippage protection on trades
-- No admin keys or upgradeability (immutable contracts)
-- Resolver role for market resolution
-
-**Note**: These contracts are for educational/hackathon purposes. Audit before mainnet deployment.
-
-## 📊 Contract Addresses
-
-### Hardhat Local (Chain ID: 31337)
-- MarketFactory: `0x5FbDB2315678afecb367f032d93F642f64180aa3` (default)
-
-### Sepolia Testnet (Chain ID: 11155111)
-- MarketFactory: `TBD`
-
-### Mainnet (Chain ID: 1)
-- MarketFactory: `TBD`
-
-## 🤝 Contributing
-
-Contributions welcome! Please:
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests
-5. Submit a pull request
-
-## 📄 License
-
-ISC License
-
-## 🙏 Acknowledgments
-
-- **ASI Alliance** for autonomous AI agent technology
-- **Fetch.ai** for uAgents framework and Agentverse
-- **SingularityNET** for MeTTa knowledge graphs
-- OpenZeppelin for secure contract libraries
-- Envio for the HyperIndex indexer
-- RainbowKit for wallet connection
-- OpenSea for NFT data
-- shadcn/ui for beautiful components
-
-## 📚 Resources
-
-### Project Documentation
-- [ASI Agents README](packages/asi-agents/README.md)
-- [ASI Quick Start](packages/asi-agents/QUICKSTART.md)
-- [ASI Integration Summary](packages/asi-agents/ASI_INTEGRATION_SUMMARY.md)
-- [Hackathon Submission Guide](packages/asi-agents/HACKATHON_SUBMISSION.md)
-
-### External Documentation
-- [Fetch.ai Innovation Lab](https://innovationlab.fetch.ai/resources/docs/intro)
-- [MeTTa Language](https://metta-lang.dev/)
-- [Agentverse](https://agentverse.ai/)
-- [ASI:One](https://asi1.ai/)
-- [Envio Documentation](https://docs.envio.dev/)
-- [RainbowKit Documentation](https://www.rainbowkit.com/)
-- [Wagmi Documentation](https://wagmi.sh/)
-- [OpenSea API Documentation](https://docs.opensea.io/)
-- [Hardhat Documentation](https://hardhat.org/)
+- Uses OpenZeppelin libraries and standard patterns
+- Time‑locked resolution prevents premature settlement
+- Slippage protection guards against adverse pricing
+- Immutable contracts by default; review before production upgrades
+- Always audit before mainnet deployment
 
 ## 🐛 Known Issues
 
-- OpenSea API has rate limits (use API key for higher limits)
-- Indexer requires Docker to run
-- Local Hardhat network resets on restart
+- OpenSea API rate‑limits apply; provide an API key for higher throughput
+- Indexer requires Docker or a compatible runtime
+- Local Hardhat network resets on restart; redeploy contracts if needed
 
 ## 🗺️ Roadmap
 
 ### Completed ✅
-- [x] Core prediction market contracts
-- [x] Real-time blockchain indexer
-- [x] Modern React frontend
-- [x] AI-powered market analysis (ASI Alliance)
-- [x] Automated market resolution (ASI agents)
-- [x] Portfolio management AI
-- [x] Multi-source price oracles
+- Core prediction market contracts
+- Real‑time blockchain indexer
+- Modern React frontend
+- AI‑powered market analysis (ASI Alliance)
+- Automated market resolution (ASI agents)
+- Portfolio management AI
+- Multi‑source price oracles
 
 ### In Progress 🚧
-- [ ] Deploy to mainnet
-- [ ] More NFT marketplace integrations (Blur, LooksRare)
-- [ ] Advanced MeTTa reasoning rules
-- [ ] Social sentiment analysis agent
+- Deploy to mainnet
+- Additional NFT marketplace integrations (Blur, LooksRare)
+- Advanced MeTTa reasoning rules
+- Social sentiment analysis agent
 
 ### Planned 📋
-- [ ] Support for more chains (Polygon, Arbitrum, etc.)
-- [ ] Additional market types (binary outcomes beyond price)
-- [ ] Liquidity provider rewards
-- [ ] Market analytics dashboard
-- [ ] Mobile app
-- [ ] Social features (comments, follows)
-- [ ] Advanced charting
-- [ ] Cross-chain agent coordination
+- Multi‑chain support (Polygon, Arbitrum, Solana)
+- Additional market types (beyond binary price outcomes)
+- Liquidity provider rewards
+- Market analytics dashboard
+- Mobile app
+- Social features (comments, follows)
+- Advanced charting
+- Cross‑chain agent coordination
 
-## 💬 Support
+## 📚 Resources
 
-For questions or issues:
-- Open a GitHub issue
-- Check package-specific READMEs
-- Review documentation links above
+### Project documentation
+- `packages/asi-agents/README.md`
+- `packages/asi-agents/QUICKSTART.md`
+- `packages/indexer/README.md`
+- `packages/frontend/README.md`
+- `packages/blockend/README.md`
+
+### External documentation
+- Fetch.ai Innovation Lab: https://innovationlab.fetch.ai/resources/docs/intro
+- MeTTa Language: https://metta-lang.dev/
+- Agentverse: https://agentverse.ai/
+- ASI:One: https://asi1.ai/
+- Envio: https://docs.envio.dev/
+- RainbowKit: https://www.rainbowkit.com/
+- Wagmi: https://wagmi.sh/
+- OpenSea API: https://docs.opensea.io/
+- Hardhat: https://hardhat.org/
+
+## 🤝 Contributing
+
+Pull requests welcome. Please include tests and follow the package-specific READMEs.
+
+## 📄 License
+
+ISC
 
 ---
 
 Built with ❤️ for the NFT and prediction market communities
+
 
