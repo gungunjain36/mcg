@@ -33,22 +33,41 @@ const BrowseCollections = () => {
     staleTime: 300000, // 5 minutes
   });
 
-  // Fetch all marketable collections
+  // Fetch all marketable collections - increased to 100
   const { data: allCollections, isLoading: isAllLoading } = useQuery({
     queryKey: ['all-collections'],
-    queryFn: () => getMarketableCollections(50),
+    queryFn: () => getMarketableCollections(100),
     staleTime: 600000, // 10 minutes
   });
 
-  // Search collections
-  const { data: searchResults, isLoading: isSearching } = useQuery({
+  // Search collections from OpenSea API (for new results not in our list)
+  const { data: apiSearchResults, isLoading: isSearching } = useQuery({
     queryKey: ['search-collections', searchQuery],
     queryFn: () => searchCollections(searchQuery),
     enabled: searchQuery.length > 2,
     staleTime: 300000,
   });
 
-  const displayCollections = searchQuery.length > 2 ? searchResults : allCollections;
+  // Client-side filtering of already loaded collections + API results
+  const displayCollections = searchQuery.length > 2 
+    ? (() => {
+        const query = searchQuery.toLowerCase();
+        
+        // Filter already-loaded collections
+        const filteredLocal = (allCollections || []).filter(collection => 
+          collection.name.toLowerCase().includes(query) ||
+          collection.collection.toLowerCase().includes(query) ||
+          collection.description?.toLowerCase().includes(query)
+        );
+        
+        // Combine with API search results (deduplicate)
+        const apiResults = apiSearchResults || [];
+        const localSlugs = new Set(filteredLocal.map(c => c.collection));
+        const uniqueApiResults = apiResults.filter(c => !localSlugs.has(c.collection));
+        
+        return [...filteredLocal, ...uniqueApiResults];
+      })()
+    : allCollections;
 
   // Sync modal state with selected collection
   useEffect(() => {
@@ -162,16 +181,33 @@ const BrowseCollections = () => {
       <section className="py-8">
         <div className="container mx-auto px-4">
           <div className="mb-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-            <h2 className="text-xl font-semibold">All Collections</h2>
+            <div>
+              <h2 className="text-xl font-semibold">All Collections</h2>
+              {displayCollections && displayCollections.length > 0 && (
+                <p className="text-sm text-muted-foreground mt-1">
+                  Showing {displayCollections.length} collection{displayCollections.length !== 1 ? 's' : ''}
+                  {searchQuery && ` for "${searchQuery}"`}
+                </p>
+              )}
+            </div>
 
             <div className="relative w-full sm:w-80">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search collections..."
+                placeholder="Search collections by name or description..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
               />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  aria-label="Clear search"
+                >
+                  ×
+                </button>
+              )}
             </div>
           </div>
 

@@ -5,13 +5,15 @@ import MarketStats from '@/components/market/MarketStats';
 import TradeWidget from '@/components/trade/TradeWidget';
 import TradeHistory from '@/components/trade/TradeHistory';
 import AsiChatWidget from '@/components/ai/AsiChatWidget';
+import RedemptionWidget from '@/components/market/RedemptionWidget';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ExternalLink } from 'lucide-react';
-import { getFloorPrice, getCollectionDisplayInfo } from '@/lib/opensea';
+import { getFloorPrice } from '@/lib/opensea';
 import { graph } from '@/lib/graphql';
 import { useOnchainMarketTotals, useRecentTradesOnchain } from '@/hooks/useOnchainFallback';
+import { useCollectionDisplay } from '@/hooks/useCollectionData';
 
 const MarketDetail = () => {
   const { id } = useParams();
@@ -35,6 +37,9 @@ const MarketDetail = () => {
   const marketFromIndexer = marketData?.market;
   const collectionSlug = marketFromIndexer?.collectionSlug || '';
   const marketAddress = marketFromIndexer?.marketAddress || id;
+  
+  // Fetch collection display info dynamically
+  const { name: collectionName, image: collectionImage } = useCollectionDisplay(collectionSlug);
   
   // Fetch OpenSea floor price
   const { data: floorPrice, isLoading: isLoadingFloor } = useQuery({
@@ -62,8 +67,8 @@ const MarketDetail = () => {
       id: marketFromIndexer.marketAddress,
       question: marketFromIndexer.question,
       collectionSlug: marketFromIndexer.collectionSlug,
-      collectionName: getCollectionDisplayInfo(marketFromIndexer.collectionSlug).name,
-      collectionImage: getCollectionDisplayInfo(marketFromIndexer.collectionSlug).image,
+      collectionName,
+      collectionImage,
       targetPrice: Number(marketFromIndexer.targetPrice) / 1e18,
       currentFloorPrice: floorPrice || 0,
       resolutionDate: new Date(Number(marketFromIndexer.resolutionTimestamp) * 1000).toISOString(),
@@ -132,6 +137,9 @@ const MarketDetail = () => {
                 src={market.collectionImage}
                 alt={market.collectionName}
                 className="h-full w-full object-cover"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = '/nfts/placeholder.svg';
+                }}
               />
             </div>
             
@@ -170,7 +178,19 @@ const MarketDetail = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column - Trading & History */}
           <div className="lg:col-span-2 space-y-6">
-            <TradeWidget market={market} marketAddress={market.id} />
+            {/* Show redemption widget if market is resolved */}
+            {market.resolved && (
+              <RedemptionWidget
+                marketAddress={market.id}
+                marketQuestion={market.question}
+                winningOutcome={market.outcome}
+                compact={false}
+              />
+            )}
+            
+            {/* Show trading widget only if market is not resolved */}
+            {!market.resolved && <TradeWidget market={market} marketAddress={market.id} />}
+            
             <TradeHistory trades={marketTrades} />
             
             {/* Market Details */}

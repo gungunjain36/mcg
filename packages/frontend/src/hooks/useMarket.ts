@@ -154,7 +154,7 @@ export function useUserShares(marketAddress: string | undefined) {
     address: marketAddress as Address,
     abi: MARKET_ABI,
     functionName: 'balanceOf',
-    args: [address as Address, BigInt(0)], // YES_SHARE_ID = 0
+    args: [address as Address, BigInt(1)], // YES_SHARE_ID = 1
     query: { enabled: !!marketAddress && !!address },
   });
 
@@ -162,7 +162,7 @@ export function useUserShares(marketAddress: string | undefined) {
     address: marketAddress as Address,
     abi: MARKET_ABI,
     functionName: 'balanceOf',
-    args: [address as Address, BigInt(1)], // NO_SHARE_ID = 1
+    args: [address as Address, BigInt(0)], // NO_SHARE_ID = 0
     query: { enabled: !!marketAddress && !!address },
   });
 

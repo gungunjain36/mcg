@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from "@tanstack/react-query";
 import Header from '@/components/layout/Header';
-import MarketCard from '@/components/market/MarketCard';
+import MarketCardWithCollection from '@/components/market/MarketCardWithCollection';
 import MarketCardSkeleton from '@/components/market/MarketCardSkeleton';
 import CreateMarketModal from '@/components/market/CreateMarketModal';
 import { Button } from '@/components/ui/button';
@@ -10,7 +10,6 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Search, TrendingUp, Plus } from 'lucide-react';
 import StatsCards from '@/components/dashboard/StatsCards';
 import { graph } from '@/lib/graphql';
-import { getCollectionDisplayInfo } from '@/lib/opensea';
 
 const Home = () => {
   const [filter, setFilter] = useState<'all' | 'active' | 'resolved'>('active');
@@ -32,7 +31,6 @@ const Home = () => {
     const yesShares = Number(m.yesSharesTotal) / 1e18;
     const noShares = Number(m.noSharesTotal) / 1e18;
     const totalShares = yesShares + noShares;
-    const display = getCollectionDisplayInfo(m.collectionSlug);
     
     // Calculate actual ETH price for YES and NO shares
     // Price represents probability (0-1 range) which equals ETH cost to buy 1 share
@@ -43,8 +41,6 @@ const Home = () => {
       id: m.marketAddress,
       question: m.question,
       collectionSlug: m.collectionSlug,
-      collectionName: display.name,
-      collectionImage: display.image,
       targetPrice: Number(m.targetPrice) / 1e18,
       currentFloorPrice: 0,
       resolutionDate: new Date(Number(m.resolutionTimestamp) * 1000).toLocaleDateString(),
@@ -68,7 +64,7 @@ const Home = () => {
       (filter === 'resolved' && market.resolved);
     
     const matchesSearch = market.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      market.collectionName.toLowerCase().includes(searchQuery.toLowerCase());
+      market.collectionSlug.toLowerCase().includes(searchQuery.toLowerCase());
     
     return matchesFilter && matchesSearch;
   });
@@ -141,7 +137,7 @@ const Home = () => {
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredMarkets.map((market) => (
-                  <MarketCard key={market.id} market={market} />
+                  <MarketCardWithCollection key={market.id} market={market} />
                 ))}
               </div>
               

@@ -249,16 +249,51 @@ export async function getCollectionWithStats(
  */
 export async function getMarketableCollections(limit: number = 50): Promise<NFTCollection[]> {
   try {
+    // First, get our popular collections
     const popularSlugs = Object.keys(POPULAR_COLLECTIONS);
-    
-    const collections = await Promise.all(
+    const popularCollections = await Promise.all(
       popularSlugs.map((slug) => getCollection(slug))
     );
     
-    return collections
+    const validPopular = popularCollections
       .filter((c): c is NFTCollection => c !== null)
-      .filter((c) => !c.is_disabled && !c.is_nsfw)
-      .slice(0, limit);
+      .filter((c) => !c.is_disabled && !c.is_nsfw);
+    
+    // If we need more collections, fetch from OpenSea API
+    if (validPopular.length < limit) {
+      try {
+        // Fetch collections with a generic search or category
+        // OpenSea API v2 doesn't have a "list all" endpoint, so we'll use multiple searches
+        const searches = ['art', 'gaming', 'pfp', 'utility', 'metaverse', 'sports'];
+        const additionalCollections: NFTCollection[] = [];
+        
+        for (const searchTerm of searches) {
+          if (additionalCollections.length >= limit - validPopular.length) break;
+          
+          const results = await searchCollections(searchTerm);
+          const filtered = results
+            .filter((c) => !c.is_disabled && !c.is_nsfw)
+            .filter((c) => !popularSlugs.includes(c.collection)); // Avoid duplicates
+          
+          additionalCollections.push(...filtered);
+        }
+        
+        // Deduplicate by collection slug
+        const seen = new Set(validPopular.map(c => c.collection));
+        const uniqueAdditional = additionalCollections.filter(c => {
+          if (seen.has(c.collection)) return false;
+          seen.add(c.collection);
+          return true;
+        });
+        
+        return [...validPopular, ...uniqueAdditional].slice(0, limit);
+      } catch (error) {
+        console.error('Error fetching additional collections:', error);
+        return validPopular.slice(0, limit);
+      }
+    }
+    
+    return validPopular.slice(0, limit);
   } catch (error) {
     console.error('Error fetching marketable collections:', error);
     return [];

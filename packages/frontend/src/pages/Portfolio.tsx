@@ -9,6 +9,7 @@ import { useQuery } from '@tanstack/react-query';
 import { graph } from '@/lib/graphql';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useOnchainPortfolioFallback } from '@/hooks/useOnchainFallback';
+import PositionCard from '@/components/portfolio/PositionCard';
 
 const Portfolio = () => {
   const { address, isConnected } = useAccount();
@@ -65,11 +66,10 @@ const Portfolio = () => {
         id: market.marketAddress,
         question: market.question,
         collectionSlug: market.collectionSlug,
-        collectionName: market.collectionSlug,
-        collectionImage: `/nfts/${market.collectionSlug || 'placeholder'}.png`,
         yesPrice,
         noPrice,
         resolved: market.status === 'Resolved',
+        winningOutcome: market.winningOutcome,
       },
       totalValue,
       profit,
@@ -97,8 +97,6 @@ const Portfolio = () => {
         id: p.marketAddress,
         question: p.question,
         collectionSlug: p.collectionSlug,
-        collectionName: p.collectionSlug,
-        collectionImage: `/nfts/${p.collectionSlug || 'placeholder'}.png`,
         yesPrice: p.yesPrice,
         noPrice: p.noPrice,
         resolved: p.resolved,
@@ -167,49 +165,14 @@ const Portfolio = () => {
                 const { position, market, totalValue, profit, profitPercent } = item;
                 
                 return (
-                  <Card key={market.id} className="border-border p-4">
-                    <div className="flex flex-col md:flex-row md:items-center gap-4">
-                      <div className="flex items-center gap-3 flex-1">
-                        <img
-                          src={market.collectionImage}
-                          alt={market.collectionName}
-                          className="h-12 w-12 rounded object-cover flex-shrink-0"
-                        />
-                        
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-medium text-sm mb-1 truncate">{market.question}</h3>
-                          <p className="text-xs text-muted-foreground">{market.collectionName}</p>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center gap-4 text-sm">
-                        {position.yesShares > 0 && (
-                          <div>
-                            <div className="text-xs text-muted-foreground">YES</div>
-                            <div className="font-medium">{position.yesShares.toFixed(2)}</div>
-                          </div>
-                        )}
-                        
-                        {position.noShares > 0 && (
-                          <div>
-                            <div className="text-xs text-muted-foreground">NO</div>
-                            <div className="font-medium">{position.noShares.toFixed(2)}</div>
-                          </div>
-                        )}
-                        
-                        <div>
-                          <div className="text-xs text-muted-foreground">Value</div>
-                          <div className="font-medium">{totalValue.toFixed(2)} ETH</div>
-                        </div>
-                      </div>
-                      
-                      <Button variant="outline" size="sm" asChild>
-                        <Link to={`/market/${market.id}`}>
-                          View
-                        </Link>
-                      </Button>
-                    </div>
-                  </Card>
+                  <PositionCard
+                    key={market.id}
+                    position={position}
+                    market={market}
+                    totalValue={totalValue}
+                    profit={profit}
+                    profitPercent={profitPercent}
+                  />
                 );
               })}
             </div>
