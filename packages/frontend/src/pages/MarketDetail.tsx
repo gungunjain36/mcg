@@ -160,13 +160,19 @@ const MarketDetail = () => {
             <div className="rounded border border-green-300/40 bg-green-500/10 p-4">
               <div className="text-xs font-medium text-green-600 mb-1">YES</div>
               <div className="text-2xl font-semibold text-green-700">
-                {(market.yesPrice * 100).toFixed(0)}¢
+                {(market.yesPrice * 100).toFixed(1)}%
+              </div>
+              <div className="text-xs text-green-600/70 mt-1">
+                {market.yesPrice.toFixed(3)} ETH per share
               </div>
             </div>
             <div className="rounded border border-red-300/40 bg-red-500/10 p-4">
               <div className="text-xs font-medium text-red-600 mb-1">NO</div>
               <div className="text-2xl font-semibold text-red-700">
-                {(market.noPrice * 100).toFixed(0)}¢
+                {(market.noPrice * 100).toFixed(1)}%
+              </div>
+              <div className="text-xs text-red-600/70 mt-1">
+                {market.noPrice.toFixed(3)} ETH per share
               </div>
             </div>
           </div>
