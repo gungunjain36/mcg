@@ -257,7 +257,9 @@ export async function getMarketableCollections(limit: number = 50): Promise<NFTC
     
     const validPopular = popularCollections
       .filter((c): c is NFTCollection => c !== null)
-      .filter((c) => !c.is_disabled && !c.is_nsfw);
+      .filter((c) => !c.is_disabled && !c.is_nsfw)
+      .filter((c) => c.name && c.name.trim() !== '' && c.name !== 'Not requested')
+      .filter((c) => c.image_url && c.image_url.trim() !== '');
     
     // If we need more collections, fetch from OpenSea API
     if (validPopular.length < limit) {
@@ -273,7 +275,9 @@ export async function getMarketableCollections(limit: number = 50): Promise<NFTC
           const results = await searchCollections(searchTerm);
           const filtered = results
             .filter((c) => !c.is_disabled && !c.is_nsfw)
-            .filter((c) => !popularSlugs.includes(c.collection)); // Avoid duplicates
+            .filter((c) => !popularSlugs.includes(c.collection)) // Avoid duplicates
+            .filter((c) => c.name && c.name.trim() !== '' && c.name !== 'Not requested') // Must have valid name
+            .filter((c) => c.image_url && c.image_url.trim() !== ''); // Must have valid image
           
           additionalCollections.push(...filtered);
         }

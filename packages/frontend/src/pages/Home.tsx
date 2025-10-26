@@ -85,12 +85,12 @@ const Home = () => {
               Trade on NFT floor price predictions. Express market opinions through outcome shares.
             </p>
             
-            <div className="flex gap-3">
+            {/* <div className="flex gap-3">
               <CreateMarketModal />
               <Button size="sm" variant="outline">
                 View All
               </Button>
-            </div>
+            </div> */}
           </div>
         </div>
       </section>

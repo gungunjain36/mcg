@@ -53,21 +53,31 @@ const BrowseCollections = () => {
     ? (() => {
         const query = searchQuery.toLowerCase();
         
-        // Filter already-loaded collections
-        const filteredLocal = (allCollections || []).filter(collection => 
-          collection.name.toLowerCase().includes(query) ||
-          collection.collection.toLowerCase().includes(query) ||
-          collection.description?.toLowerCase().includes(query)
-        );
+        // Filter already-loaded collections (exclude invalid names)
+        const filteredLocal = (allCollections || []).filter(collection => {
+          // Skip collections with invalid names
+          if (!collection.name || collection.name.trim() === '' || collection.name === 'Not requested') {
+            return false;
+          }
+          return (
+            collection.name.toLowerCase().includes(query) ||
+            collection.collection.toLowerCase().includes(query) ||
+            collection.description?.toLowerCase().includes(query)
+          );
+        });
         
-        // Combine with API search results (deduplicate)
-        const apiResults = apiSearchResults || [];
+        // Combine with API search results (deduplicate and filter invalid)
+        const apiResults = (apiSearchResults || []).filter(c => 
+          c.name && c.name.trim() !== '' && c.name !== 'Not requested'
+        );
         const localSlugs = new Set(filteredLocal.map(c => c.collection));
         const uniqueApiResults = apiResults.filter(c => !localSlugs.has(c.collection));
         
         return [...filteredLocal, ...uniqueApiResults];
       })()
-    : allCollections;
+    : (allCollections || []).filter(c => 
+        c.name && c.name.trim() !== '' && c.name !== 'Not requested'
+      );
 
   // Sync modal state with selected collection
   useEffect(() => {
@@ -149,7 +159,9 @@ const BrowseCollections = () => {
                   </div>
                   <div className="p-4">
                     <h3 className="font-semibold text-sm mb-2 truncate">
-                      {collection.name}
+                      {collection.name && collection.name.trim() !== '' && collection.name !== 'Not requested'
+                        ? collection.name
+                        : collection.collection || 'Unknown Collection'}
                     </h3>
                     <div className="flex items-center justify-between text-xs">
                       <div>
@@ -247,7 +259,9 @@ const BrowseCollections = () => {
                       </div>
                       <div className="flex-1 min-w-0">
                         <h3 className="font-semibold text-sm mb-1 truncate">
-                          {collection.name}
+                          {collection.name && collection.name.trim() !== '' && collection.name !== 'Not requested'
+                            ? collection.name
+                            : collection.collection || 'Unknown Collection'}
                         </h3>
                         <p className="text-xs text-muted-foreground truncate">
                           {collection.description || 'No description available'}

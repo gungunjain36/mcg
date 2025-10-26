@@ -20,6 +20,8 @@ contracts:
       - event: MarketResolved(bool winningOutcome, uint256 finalReportedPrice)
       - event: SharesRedeemed(address indexed user, uint256 sharesRedeemed, uint256 ethReceived)
       - event: LiquidityProvided(address indexed provider, uint256 initialYesShares, uint256 initialNoShares, uint256 ethAmount)
+    # Dynamic contract tracking: Markets are created by MarketFactory at runtime
+    # We use wildcard_tracking to automatically index all Market contracts
 
 networks:
   # Sepolia testnet - main network for testing
@@ -44,7 +46,12 @@ networks:
         address:
           - 0x25A57013bc5139E3FCb06189592652Cd146aecA5
       - name: Market
-        # Markets are created dynamically
+        # NOTE: Add specific market contract addresses here as they are created
+        # address:
+        #   - 0xYourMarketAddress1
+        #   - 0xYourMarketAddress2
+        # Markets are created dynamically by MarketFactory
+        # You must add each new market address here and restart the indexer
 
   # Local hardhat network for development
   # - id: 31337

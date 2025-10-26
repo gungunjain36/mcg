@@ -113,6 +113,14 @@ const queries = {
       }
     }
   `,
+  userTrades: `
+    query ($userAddress: String!, $limit: Int!, $offset: Int!) {
+      Trade(where: {user_id: {_eq: $userAddress}}, limit: $limit, offset: $offset, order_by: {timestamp: desc}) {
+        id market_id user_id outcome isBuy shareAmount ethAmount 
+        yesSharesTotal noSharesTotal timestamp blockNumber transactionHash
+      }
+    }
+  `,
 };
 
 export const graph = {
@@ -130,6 +138,8 @@ export const graph = {
     gqlReq<{ Trade: TradeEntity[] }>(queries.marketTrades, { marketId, limit, offset }),
   getUserPositions: (userAddress: string) =>
     gqlReq<{ Position: PositionEntity[] }>(queries.userPositions, { userAddress: userAddress.toLowerCase() }),
+  getUserTrades: (userAddress: string, limit = 50, offset = 0) =>
+    gqlReq<{ Trade: TradeEntity[] }>(queries.userTrades, { userAddress: userAddress.toLowerCase(), limit, offset }),
 };
 
 
