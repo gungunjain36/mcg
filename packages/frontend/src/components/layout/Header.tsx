@@ -2,47 +2,49 @@ import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { User, Wallet } from 'lucide-react';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
+import logo from '../../../public/logo.png';
+
+const NAV_LINKS = [
+  { to: "/", label: "Markets" },
+  { to: "/browse", label: "Browse NFTs" },
+  { to: "/portfolio", label: "Portfolio" },
+];
 
 const Header = () => {
   const location = useLocation();
-  
+
   const isActive = (path: string) => location.pathname === path;
-  
+
   return (
-    <header className="sticky top-0 z-50 border-b border-border bg-background">
+    <header className="sticky top-0 z-50 bg-background">
       <div className="container mx-auto px-4">
         <div className="flex h-14 items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
+            <img src={logo} alt="Logo" className="h-7 w-20" />
             <span className="text-lg font-semibold">mcg.fun</span>
           </Link>
-          
-          <nav className="hidden md:flex items-center gap-6">
-            <Link
-              to="/"
-              className={`text-sm font-medium transition-smooth ${
-                isActive('/') ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              Markets
-            </Link>
-            <Link
-              to="/browse"
-              className={`text-sm font-medium transition-smooth ${
-                isActive('/browse') ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              Browse NFTs
-            </Link>
-            <Link
-              to="/portfolio"
-              className={`text-sm font-medium transition-smooth ${
-                isActive('/portfolio') ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              Portfolio
-            </Link>
+          {/* Navbar "pills" navigation */}
+          <nav className="hidden md:flex items-center">
+            <div className="flex space-x-2 px-1.5 py-1 rounded-full border border-border bg-background/70 backdrop-blur-lg">
+              {NAV_LINKS.map((nav, idx) => (
+                <Link
+                  key={nav.to}
+                  to={nav.to}
+                  className={`text-sm font-medium transition-smooth rounded-full px-4 py-1.5
+                    ${
+                      isActive(nav.to)
+                        ? "bg-primary text-primary-foreground shadow"
+                        : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                    }
+                  `}
+                  style={{ transition: 'background 0.15s, color 0.15s' }}
+                >
+                  {nav.label}
+                </Link>
+              ))}
+            </div>
           </nav>
-          
+
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="icon" className="hidden md:flex">
               <User className="h-4 w-4" />

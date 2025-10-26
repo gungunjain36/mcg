@@ -84,13 +84,6 @@ const Home = () => {
             <p className="text-base text-muted-foreground mb-6">
               Trade on NFT floor price predictions. Express market opinions through outcome shares.
             </p>
-            
-            {/* <div className="flex gap-3">
-              <CreateMarketModal />
-              <Button size="sm" variant="outline">
-                View All
-              </Button>
-            </div> */}
           </div>
         </div>
       </section>
@@ -98,15 +91,6 @@ const Home = () => {
       {/* Markets Section */}
       <section className="py-8">
         <div className="container mx-auto px-4">
-          <div className="mb-8">
-            <StatsCards
-              totalMarkets={statsData?.globalStats?.totalMarkets}
-              totalTrades={statsData?.globalStats?.totalTrades}
-              totalUsers={statsData?.globalStats?.totalUsers}
-              totalVolumeEth={statsData?.globalStats ? (Number(statsData.globalStats.totalVolume) / 1e18).toFixed(2) : '0'}
-              loading={statsLoading}
-            />
-          </div>
           <div className="mb-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
             <Tabs value={filter} onValueChange={(v) => setFilter(v as any)}>
               <TabsList>

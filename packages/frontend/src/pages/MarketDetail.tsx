@@ -6,6 +6,7 @@ import TradeWidget from '@/components/trade/TradeWidget';
 import TradeHistory from '@/components/trade/TradeHistory';
 import AsiChatWidget from '@/components/ai/AsiChatWidget';
 import RedemptionWidget from '@/components/market/RedemptionWidget';
+import MarketResolutionWidget from '@/components/market/MarketResolutionWidget';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -14,6 +15,7 @@ import { getFloorPrice } from '@/lib/opensea';
 import { graph } from '@/lib/graphql';
 import { useOnchainMarketTotals, useRecentTradesOnchain } from '@/hooks/useOnchainFallback';
 import { useCollectionDisplay } from '@/hooks/useCollectionData';
+import { useMarketDetails } from '@/hooks/useMarket';
 
 const MarketDetail = () => {
   const { id } = useParams();
@@ -52,6 +54,9 @@ const MarketDetail = () => {
   // On-chain fallback: totals and recent trades
   const onchainTotals = useOnchainMarketTotals(marketAddress);
   const onchainTrades = useRecentTradesOnchain(marketAddress, 50);
+  
+  // Get on-chain market details (including resolver)
+  const { resolver } = useMarketDetails(marketAddress);
 
   // Create market object (prefer indexer; fallback to on-chain totals)
   const market = marketFromIndexer ? (() => {
@@ -184,6 +189,17 @@ const MarketDetail = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column - Trading & History */}
           <div className="lg:col-span-2 space-y-6">
+            {/* Show resolution widget if market is past resolution date and not resolved */}
+            {!market.resolved && new Date() >= new Date(market.resolutionDate) && resolver && (
+              <MarketResolutionWidget
+                marketAddress={market.id}
+                marketQuestion={market.question}
+                targetPrice={market.targetPrice}
+                resolverAddress={resolver}
+                currentFloorPrice={market.currentFloorPrice}
+              />
+            )}
+            
             {/* Show redemption widget if market is resolved */}
             {market.resolved && (
               <RedemptionWidget
