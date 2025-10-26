@@ -6,10 +6,10 @@
 
 // Agent addresses (update these after deploying to Agentverse)
 export const ASI_AGENTS = {
-  marketAnalyst: process.env.VITE_ASI_MARKET_ANALYST || '',
-  resolver: process.env.VITE_ASI_RESOLVER || '',
-  portfolioAdvisor: process.env.VITE_ASI_PORTFOLIO_ADVISOR || '',
-  oracle: process.env.VITE_ASI_ORACLE || '',
+  marketAnalyst: (import.meta as any).env?.VITE_ASI_MARKET_ANALYST || '',
+  resolver: (import.meta as any).env?.VITE_ASI_RESOLVER || '',
+  portfolioAdvisor: (import.meta as any).env?.VITE_ASI_PORTFOLIO_ADVISOR || '',
+  oracle: (import.meta as any).env?.VITE_ASI_ORACLE || '',
 };
 
 // Agentverse API configuration
@@ -18,6 +18,23 @@ const AGENTVERSE_API = {
   messages: '/agents',
   query: '/query',
 };
+
+// Optional: Local gateway URL to use local uAgents instead of Agentverse
+const ASI_GATEWAY_BASE = (import.meta as any).env?.VITE_ASI_GATEWAY_URL || '';
+
+// Optional: route via Agentverse to local agents using their local URIs
+const ASI_AGENT_URIS = {
+  marketAnalyst: (import.meta as any).env?.VITE_ASI_MARKET_ANALYST_URI || '',
+  resolver: (import.meta as any).env?.VITE_ASI_RESOLVER_URI || '',
+  portfolioAdvisor: (import.meta as any).env?.VITE_ASI_PORTFOLIO_ADVISOR_URI || '',
+  oracle: (import.meta as any).env?.VITE_ASI_ORACLE_URI || '',
+};
+
+// Optional: Agentverse API key/token (supports either var name)
+const AGENTVERSE_API_KEY =
+  (import.meta as any).env?.VITE_AGENTVERSE_API_KEY ||
+  (import.meta as any).env?.VITE_AGENTVERSE_ACCESS_TOKEN ||
+  '';
 
 /**
  * Message types for agent communication
@@ -114,22 +131,45 @@ export class AgentverseClient {
     message: TRequest
   ): Promise<AgentResponse<TResponse>> {
     try {
-      const response = await fetch(
-        `${AGENTVERSE_API.base}${AGENTVERSE_API.messages}/${agentAddress}/messages`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            message,
-            session_id: this.sessionId,
-          }),
-        }
+      const url = new URL(
+        `${AGENTVERSE_API.base}${AGENTVERSE_API.messages}/${agentAddress}/messages`
       );
 
+      // If a per-agent local URI is configured, pass it as a query param
+      const localUri =
+        (agentAddress === ASI_AGENTS.marketAnalyst && ASI_AGENT_URIS.marketAnalyst) ||
+        (agentAddress === ASI_AGENTS.portfolioAdvisor && ASI_AGENT_URIS.portfolioAdvisor) ||
+        (agentAddress === ASI_AGENTS.oracle && ASI_AGENT_URIS.oracle) ||
+        (agentAddress === ASI_AGENTS.resolver && ASI_AGENT_URIS.resolver) ||
+        '';
+      if (localUri) {
+        const finalUri = /\/submit\/?$/.test(localUri) ? localUri : `${localUri.replace(/\/$/, '')}/submit`;
+        url.searchParams.set('uri', finalUri);
+      }
+
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      if (AGENTVERSE_API_KEY) {
+        headers['Authorization'] = `Bearer ${AGENTVERSE_API_KEY}`;
+      }
+
+      const response = await fetch(url.toString(), {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          message,
+          session_id: this.sessionId,
+        }),
+      });
+
       if (!response.ok) {
-        throw new Error(`Agent communication failed: ${response.statusText}`);
+        const text = await response.text().catch(() => '');
+        throw new Error(
+          `Agent communication failed: ${response.status} ${response.statusText}${
+            text ? ` - ${text}` : ''
+          }`
+        );
       }
 
       const data = await response.json();
@@ -163,10 +203,31 @@ export class AgentverseClient {
       include_prediction: includePrediction,
     };
 
-    return this.sendMessage<AnalyzeMarketRequest, MarketAnalysisResponse>(
-      ASI_AGENTS.marketAnalyst,
-      request
-    );
+    // If a local gateway is configured, call it directly
+    if (ASI_GATEWAY_BASE) {
+      try {
+        const resp = await fetch(`${ASI_GATEWAY_BASE.replace(/\/$/, '')}/asi/analyze`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(request),
+        });
+        if (!resp.ok) {
+          const text = await resp.text().catch(() => '');
+          throw new Error(`Gateway error: ${resp.status} ${resp.statusText}${text ? ` - ${text}` : ''}`);
+        }
+        const data = await resp.json();
+        return { success: true, data, timestamp: new Date().toISOString() };
+      } catch (error) {
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown gateway error',
+          timestamp: new Date().toISOString(),
+        };
+      }
+    }
+
+    // Default: use Agentverse
+    return this.sendMessage<AnalyzeMarketRequest, MarketAnalysisResponse>(ASI_AGENTS.marketAnalyst, request);
   }
 
   /**

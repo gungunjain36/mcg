@@ -3,14 +3,20 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Bot, Send, TrendingUp } from 'lucide-react';
+import { Send } from 'lucide-react';
+import { agentverseClient, formatAgentResponse, isAsiConfigured } from '@/lib/agentverse-client';
 
 interface Message {
   role: 'user' | 'assistant';
   content: string;
 }
 
-const AsiChatWidget = () => {
+interface AsiChatWidgetProps {
+  marketAddress: string;
+  collectionSlug: string;
+}
+
+const AsiChatWidget = ({ marketAddress, collectionSlug }: AsiChatWidgetProps) => {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
@@ -34,21 +40,37 @@ const AsiChatWidget = () => {
     setMessages((prev) => [...prev, userMessage]);
     setInput('');
     setIsTyping(true);
-    
-    // Simulate AI response
-    setTimeout(() => {
-      const responses = [
-        "Recent trades show strong buy pressure on 'Yes' shares, pushing the price to 0.65 ETH, suggesting increasing confidence in a higher floor price.",
-        "Based on the current market data, there's been a 15% increase in trading volume over the last 24 hours, indicating growing interest.",
-        "The liquidity pool is well-balanced at 1,250 ETH, which should minimize slippage for trades up to 50 ETH.",
-        "Historical data suggests that markets with similar patterns tend to resolve in favor of the current leading outcome about 68% of the time.",
-      ];
-      
-      const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-      
-      setMessages((prev) => [...prev, { role: 'assistant', content: randomResponse }]);
+
+    try {
+      if (!isAsiConfigured()) {
+        setMessages((prev) => [
+          ...prev,
+          { role: 'assistant', content: 'ASI agents are not configured. Please set VITE_ASI_* environment variables.' },
+        ]);
+        setIsTyping(false);
+        return;
+      }
+
+      if (!marketAddress || !collectionSlug) {
+        setMessages((prev) => [
+          ...prev,
+          { role: 'assistant', content: 'Missing market context. Try opening a specific market page.' },
+        ]);
+        setIsTyping(false);
+        return;
+      }
+
+      const response = await agentverseClient.analyzeMarket(marketAddress, collectionSlug, true);
+      const formatted = formatAgentResponse(response);
+      setMessages((prev) => [...prev, { role: 'assistant', content: formatted }]);
+    } catch (err) {
+      setMessages((prev) => [
+        ...prev,
+        { role: 'assistant', content: 'There was an error contacting the ASI agent. Please try again.' },
+      ]);
+    } finally {
       setIsTyping(false);
-    }, 1500);
+    }
   };
   
   return (

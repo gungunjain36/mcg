@@ -7,12 +7,16 @@ import asyncio
 import logging
 import sys
 from typing import List
+import uvicorn
+from threading import Thread
+import os
 
 # Import all agents
 from agents.market_analyst import agent as market_analyst
 from agents.resolver_agent import agent as resolver
 from agents.portfolio_advisor import agent as portfolio_advisor
 from agents.oracle_agent import agent as oracle
+from gateway import app as gateway_app
 
 # Setup logging
 logging.basicConfig(
@@ -36,6 +40,9 @@ async def run_agent(agent, name: str):
         raise
 
 
+def run_gateway():
+    uvicorn.run(gateway_app, host="0.0.0.0", port=int(os.getenv("GATEWAY_PORT", "8010")))
+
 async def main():
     """Run all agents concurrently"""
     logger.info("=" * 60)
@@ -45,6 +52,10 @@ async def main():
     logger.info("Starting all 4 autonomous agents...")
     logger.info("")
     
+    # Start gateway in background thread (avoid multiprocessing import issues)
+    gateway_thread = Thread(target=run_gateway, daemon=True)
+    gateway_thread.start()
+
     # Create tasks for all agents
     tasks: List[asyncio.Task] = [
         asyncio.create_task(run_agent(market_analyst, "Market Analyst")),
@@ -80,6 +91,7 @@ async def main():
         await asyncio.gather(*tasks, return_exceptions=True)
         
         logger.info("👋 All agents stopped successfully")
+        # Thread is daemon; it will exit on process shutdown
 
 
 if __name__ == "__main__":

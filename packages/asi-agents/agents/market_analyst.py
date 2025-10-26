@@ -8,9 +8,19 @@ import os
 import logging
 from typing import Optional, Dict, List
 from datetime import datetime
+from uuid import uuid4
 
-from uagents import Agent, Context, Model
+from openai import OpenAI
+from uagents import Agent, Context, Model, Protocol
 from uagents.setup import fund_agent_if_low
+from uagents_core.contrib.protocols.chat import (
+    ChatAcknowledgement,
+    ChatMessage,
+    EndSessionContent,
+    StartSessionContent,
+    TextContent,
+    chat_protocol_spec,
+)
 import requests
 
 # Setup logging
@@ -63,6 +73,22 @@ class MarketAnalysisResponse(Model):
     timestamp: str
 
 
+# Chat Protocol Functions
+def create_text_chat(text: str, end_session: bool = False) -> ChatMessage:
+    content = [TextContent(type="text", text=text)]
+    if end_session:
+        content.append(EndSessionContent(type="end-session"))
+    return ChatMessage(timestamp=datetime.utcnow(), msg_id=uuid4(), content=content)
+
+
+# OpenAI client for ASI-1 model
+client = OpenAI(
+    # By default, we are using the ASI-1 LLM endpoint and model
+    base_url='https://api.asi1.ai/v1',
+    # You can get an ASI-1 api key by creating an account at https://asi1.ai/dashboard/api-keys
+    api_key=os.getenv("ASI1_API_KEY", "INSERT_YOUR_API_HERE"),
+)
+
 # Create Agent
 agent = Agent(
     name="mcg_market_analyst",
@@ -70,6 +96,9 @@ agent = Agent(
     port=int(os.getenv("MARKET_ANALYST_PORT", "8001")),
     endpoint=[f"http://localhost:{os.getenv('MARKET_ANALYST_PORT', '8001')}/submit"]
 )
+
+# Create chat protocol
+chat_proto = Protocol(spec=chat_protocol_spec)
 
 logger.info(f"✅ Market Analyst Agent initialized")
 logger.info(f"📡 Agent Address: {agent.address}")
@@ -223,6 +252,103 @@ def generate_reasoning(
     return reasoning
 
 
+async def handle_user_text_with_ai(text: str, ctx: Context) -> str:
+    """
+    Handle user text input for market analysis using ASI-1 model
+    """
+    try:
+        # Create a system prompt that includes market analysis capabilities
+        system_prompt = f"""You are an expert NFT market analyst agent. You specialize in analyzing NFT collections, providing floor prices, market sentiment analysis, and trading recommendations.
+
+Your capabilities include:
+- Analyzing NFT collection market trends
+- Providing current floor prices from OpenSea
+- Analyzing market sentiment based on trading activity
+- Making price predictions and trading recommendations
+- Using MeTTa knowledge graphs for structured reasoning
+
+You have access to real-time data from OpenSea API and prediction markets.
+
+When users ask about NFT collections, provide helpful analysis. If they ask about topics outside of NFT market analysis, politely redirect them to your area of expertise.
+
+Available commands:
+- "analyze [collection-name]" - Full market analysis
+- "floor price of [collection-name]" - Get current floor price
+- "sentiment for [collection-name]" - Market sentiment analysis
+- "help" - Show available commands
+
+Respond in a friendly, professional manner as a market analyst would."""
+
+        r = client.chat.completions.create(
+            model="asi1-mini",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": text},
+            ],
+            max_tokens=2048,
+        )
+
+        response = str(r.choices[0].message.content)
+        
+        # If the AI suggests analysis, we can enhance with actual data
+        text_lower = text.lower().strip()
+        if "analyze" in text_lower and any(word in text_lower for word in ["boredapeyachtclub", "cryptopunks", "azuki", "pudgypenguins"]):
+            # Extract collection name and add real data
+            words = text_lower.split()
+            for word in words:
+                if word in ["boredapeyachtclub", "cryptopunks", "azuki", "pudgypenguins"]:
+                    try:
+                        floor_price = await fetch_floor_price(word)
+                        if floor_price > 0:
+                            response += f"\n\n📊 Real-time data: Current floor price for {word} is {floor_price:.4f} ETH"
+                    except:
+                        pass
+                    break
+        
+        return response
+        
+    except Exception as e:
+        ctx.logger.exception('Error querying ASI-1 model')
+        return f"I'm having trouble processing your request right now. Please try again later. As your market analyst, I can help with NFT collection analysis, floor prices, and trading recommendations. {e}"
+
+
+# Chat Protocol Handlers
+@chat_proto.on_message(ChatMessage)
+async def handle_chat(ctx: Context, sender: str, msg: ChatMessage):
+    # 1) Send the acknowledgement for receiving the message
+    await ctx.send(
+        sender,
+        ChatAcknowledgement(timestamp=datetime.utcnow(), acknowledged_msg_id=msg.msg_id),
+    )
+
+    # 2) greet if a session starts
+    if any(isinstance(item, StartSessionContent) for item in msg.content):
+        await ctx.send(sender, create_text_chat("Hi! I'm your Market Analyst Agent powered by ASI-1. I can analyze NFT markets, provide floor prices, and give AI-powered trading recommendations. How can I help?", end_session=False))
+
+    # 3) collect all text at once
+    text = msg.text()
+    if not text:
+        return
+    
+    try:
+        reply = await handle_user_text_with_ai(text, ctx)
+    except Exception as e:
+        ctx.logger.exception("Error in handle_user_text_with_ai")
+        reply = f"Sorry, something went wrong with the analysis. Please try again. {e}"
+
+    # 4) decide whether to end the session or keep it open
+    end_now = False  # Keep session open for continuous market analysis
+    await ctx.send(sender, create_text_chat(reply, end_session=end_now))
+
+
+@chat_proto.on_message(ChatAcknowledgement)
+async def handle_ack(ctx: Context, sender: str, msg: ChatAcknowledgement):
+    # we are not interested in the acknowledgements for this example, but they can be useful to
+    # implement read receipts, for example.
+    # ctx.logger.info(f"Got an acknowledgement from {sender} for {msg.acknowledged_msg_id}")
+    pass
+
+
 # Event Handlers
 @agent.on_event("startup")
 async def startup(ctx: Context):
@@ -322,8 +448,11 @@ async def periodic_scan(ctx: Context):
         ctx.logger.error(f"Scan failed: {e}")
 
 
+# Include chat protocol to agent
+agent.include(chat_proto, publish_manifest=True)
+
+
 # Main entry point
 if __name__ == "__main__":
     logger.info("🚀 Starting Market Analyst Agent...")
     agent.run()
-

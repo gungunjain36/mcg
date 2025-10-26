@@ -260,7 +260,7 @@ const MarketDetail = () => {
                 </div>
               </div>
             </Card>
-            <AsiChatWidget />
+            <AsiChatWidget marketAddress={market.id} collectionSlug={market.collectionSlug} />
           </div>
         </div>
       </div>
