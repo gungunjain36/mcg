@@ -20,11 +20,6 @@ Autonomous AI agents enhance the product with always‑on market analysis, autom
 ![WhatsApp Image 2025-10-26 at 8 48 39 PM (1)](https://github.com/user-attachments/assets/9c7cfe6d-14b7-4c71-8a9f-c7c15f17fae2)
 
 
-
-## 🧭 Architecture Diagram
-
-<!-- Intentionally left blank (add diagram as needed) -->
-
 ## 🔑 Key Features
 
 - Smart contracts
