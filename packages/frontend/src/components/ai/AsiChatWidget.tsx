@@ -38,10 +38,10 @@ const AsiChatWidget = () => {
     // Simulate AI response
     setTimeout(() => {
       const responses = [
-        "Recent trades show strong buy pressure on 'Yes' shares, pushing the price to 0.65 ETH, suggesting increasing confidence in a higher floor price.",
-        "Based on the current market data, there's been a 15% increase in trading volume over the last 24 hours, indicating growing interest.",
-        "The liquidity pool is well-balanced at 1,250 ETH, which should minimize slippage for trades up to 50 ETH.",
-        "Historical data suggests that markets with similar patterns tend to resolve in favor of the current leading outcome about 68% of the time.",
+        "Based on the latest analysis, buying 'Yes' appears to have a higher probability of success at the current price.",
+        "'Yes' seems to show stronger momentum right now, so I would recommend considering a purchase of 'Yes' shares.",
+        "Recent market data suggests that 'Yes' is favored by most traders at this moment.",
+        "Given the current trends, 'Yes' is statistically more likely to yield a positive outcome.",
       ];
       
       const randomResponse = responses[Math.floor(Math.random() * responses.length)];
